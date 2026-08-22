@@ -8,3 +8,4 @@ __pycache__/
 tools/refine_dict
 tools/offset_hist
 *.o
+runs/
