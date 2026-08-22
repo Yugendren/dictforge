@@ -1,5 +1,6 @@
 third_party/
-corpora/
+corpora/*
+!corpora/fetch_corpora.py
 *.pyc
 __pycache__/
 .DS_Store
