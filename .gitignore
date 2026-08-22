@@ -5,3 +5,6 @@ corpora/*
 __pycache__/
 .DS_Store
 *.log
+tools/refine_dict
+tools/offset_hist
+*.o
