@@ -1,0 +1,36 @@
+experiment,corpus,level,variant,dict_size,ratio,train_wall_s,note
+MAIN,github_users,3,nodict,0,2.953698,0.000,
+MAIN,github_users,3,default,112640,9.646165,0.785,zstd --train --maxdict=112640 -T8
+MAIN,github_users,3,tuned,1048576,10.202290,42.055,trainer.py --stages 1 --time-budget-s 600
+MAIN,github_users,3,full,1048576,9.944199,41.570,trainer.py --stages all --time-budget-s 600
+MAIN,github_users,3,rawconcat,112640,8.318263,0.021,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+MAIN,github_users,19,nodict,0,3.028970,0.000,
+MAIN,github_users,19,default,112640,9.955016,0.165,zstd --train --maxdict=112640 -T8
+MAIN,github_users,19,tuned,1048576,10.689767,44.775,trainer.py --stages 1 --time-budget-s 1800
+MAIN,github_users,19,full,1048575,11.102099,1778.670,trainer.py --stages all --time-budget-s 1800
+MAIN,github_users,19,rawconcat,112640,9.344356,0.072,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+E1,github_users,3,cover_16384,16384,10.041163,3.348,candidate; equal-compute budget=41.6s; accumulated=3.3s; evaluated on train-internal val split
+E1,github_users,3,cover_65536,65536,10.018961,3.383,candidate; equal-compute budget=41.6s; accumulated=6.7s; evaluated on train-internal val split
+E1,github_users,3,cover_112640,112640,10.129588,3.395,candidate; equal-compute budget=41.6s; accumulated=10.1s; evaluated on train-internal val split
+E1,github_users,3,cover_262144,262144,10.055229,3.415,candidate; equal-compute budget=41.6s; accumulated=13.5s; evaluated on train-internal val split
+E1,github_users,3,cover_524288,524288,9.852391,4.235,candidate; equal-compute budget=41.6s; accumulated=17.8s; evaluated on train-internal val split
+E1,github_users,3,cover_1048576,424524,7.487778,3.861,candidate; equal-compute budget=41.6s; accumulated=21.6s; evaluated on train-internal val split
+E1,github_users,3,cover_2097152,425048,6.949444,3.381,candidate; equal-compute budget=41.6s; accumulated=25.0s; evaluated on train-internal val split
+E1,github_users,3,winner,112640,10.095207,3.395,winner=cover_112640b (by val_ratio=10.129588); equal-compute budget=41.6s (=MAIN full train_wall_s); heldout ratio (no refit-on-full)
+E1,github_users,19,cover_16384,16384,9.846660,3.542,candidate; equal-compute budget=1778.7s; accumulated=3.5s; evaluated on train-internal val split
+E1,github_users,19,cover_65536,65536,9.960124,3.426,candidate; equal-compute budget=1778.7s; accumulated=7.0s; evaluated on train-internal val split
+E1,github_users,19,cover_112640,112640,10.050498,3.423,candidate; equal-compute budget=1778.7s; accumulated=10.4s; evaluated on train-internal val split
+E1,github_users,19,cover_262144,262144,9.980289,3.618,candidate; equal-compute budget=1778.7s; accumulated=14.0s; evaluated on train-internal val split
+E1,github_users,19,cover_524288,524288,10.392290,4.139,candidate; equal-compute budget=1778.7s; accumulated=18.1s; evaluated on train-internal val split
+E1,github_users,19,cover_1048576,424410,9.074623,3.679,candidate; equal-compute budget=1778.7s; accumulated=21.8s; evaluated on train-internal val split
+E1,github_users,19,cover_2097152,425077,9.328232,3.581,candidate; equal-compute budget=1778.7s; accumulated=25.4s; evaluated on train-internal val split
+E1,github_users,19,winner,524288,10.420650,4.139,winner=cover_524288b (by val_ratio=10.392290); equal-compute budget=1778.7s (=MAIN full train_wall_s); heldout ratio (no refit-on-full)
+E2,github_users,3,klauspost_112640,17147,5.821298,0.554,"klauspost/compress dict/cmd/builddict -zlevel=1 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=110K_default_match; evaluated with our zstd on heldout"
+E2,github_users,3,klauspost_1048576,17165,5.824866,0.496,"klauspost/compress dict/cmd/builddict -zlevel=1 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=full_variant_winning_size; evaluated with our zstd on heldout"
+E2,github_users,19,klauspost_112640,17177,7.291603,6.357,"klauspost/compress dict/cmd/builddict -zlevel=4 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=110K_default_match; evaluated with our zstd on heldout"
+E2,github_users,19,klauspost_1048575,17177,7.291496,6.393,"klauspost/compress dict/cmd/builddict -zlevel=4 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=full_variant_winning_size; evaluated with our zstd on heldout"
+E4,github_users,3,mem_default_train,112640,9.646165,0.170,max_rss_bytes=50724864
+E4,github_users,3,mem_trainer_full,1048576,9.944199,41.354,"max_rss_bytes=263897088; CAVEAT: /usr/bin/time -l on macOS reports only the traced process's own peak RSS; it does NOT aggregate memory of forked subprocesses. For mem_trainer_full this captures the python3 driver only, excluding the zstd/refine_dict/offset_hist child processes it spawns (likely the dominant consumer). mem_default_train and mem_batch_* trace a single zstd process directly and are NOT subject to this gap."
+E4,github_users,3,mem_batch_default,112640,9.646165,0.231,single batch-compress of heldout with default dict; max_rss_bytes=2834432
+E4,github_users,3,mem_batch_full,1048576,9.944199,0.232,single batch-compress of heldout with full dict; max_rss_bytes=4145152
+E4,github_users,19,mem_default_train,112640,9.955016,0.146,max_rss_bytes=51658752
