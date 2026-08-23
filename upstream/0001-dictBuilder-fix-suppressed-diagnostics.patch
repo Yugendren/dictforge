@@ -1,0 +1,74 @@
+From: Yugen <19thkingisreal@gmail.com>
+Subject: [PATCH] dictBuilder: fix displayLevel being zeroed before use
+
+COVER_ctx_init() and FASTCOVER_ctx_init() both assign ctx->displayLevel
+from the caller's notification level and then memset() the whole context
+to zero a few lines later. Every diagnostic that reads back
+ctx->displayLevel therefore sees 0 and is silently suppressed, at any -v
+level.
+
+Concretely, this disables the dictionary builder's progress reporting in
+COVER_buildDictionary()/FASTCOVER_buildDictionary(), including:
+
+    "Breaking content into %u epochs of size %u\n"
+    "Constructed dictionary of size %u\n"
+
+Those two lines are the only user-visible signal of the builder's epoch
+geometry and of how much of --maxdict was actually filled, so a build
+that terminates early (zero-score run) and emits a dictionary much
+smaller than requested currently does so with no output whatsoever, even
+at -vvvv.
+
+Diagnostics emitted directly inside *_ctx_init() are unaffected, because
+the DISPLAYLEVEL macro captures the local variable and the function
+parameter is still in scope there; only the read-back through the context
+is broken. This is why the bug is easy to miss.
+
+Fix: perform the assignment after the memset.
+
+Signed-off-by: Yugen <19thkingisreal@gmail.com>
+---
+ lib/dictBuilder/cover.c     | 3 ++-
+ lib/dictBuilder/fastcover.c | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/lib/dictBuilder/cover.c b/lib/dictBuilder/cover.c
+index 1234567..89abcde 100644
+--- a/lib/dictBuilder/cover.c
++++ b/lib/dictBuilder/cover.c
+@@ -636,7 +636,6 @@ static size_t COVER_ctx_init(COVER_ctx_t *ctx, const void *samplesBuffer,
+   const size_t trainingSamplesSize = splitPoint < 1.0 ? COVER_sum(samplesSizes, nbTrainSamples) : totalSamplesSize;
+   const size_t testSamplesSize = splitPoint < 1.0 ? COVER_sum(samplesSizes + nbTrainSamples, nbTestSamples) : totalSamplesSize;
+-  ctx->displayLevel = displayLevel;
+   /* Checks */
+   if (totalSamplesSize < MAX(d, sizeof(U64)) ||
+       totalSamplesSize >= (size_t)COVER_MAX_SAMPLES_SIZE) {
+@@ -656,6 +655,8 @@ static size_t COVER_ctx_init(COVER_ctx_t *ctx, const void *samplesBuffer,
+   }
+   /* Zero the context */
+   memset(ctx, 0, sizeof(*ctx));
++  /* Must come after the memset, which would otherwise clear it */
++  ctx->displayLevel = displayLevel;
+   DISPLAYLEVEL(2, "Training on %u samples of total size %u\n", nbTrainSamples,
+                (unsigned)trainingSamplesSize);
+   DISPLAYLEVEL(2, "Testing on %u samples of total size %u\n", nbTestSamples,
+diff --git a/lib/dictBuilder/fastcover.c b/lib/dictBuilder/fastcover.c
+index 1234567..89abcde 100644
+--- a/lib/dictBuilder/fastcover.c
++++ b/lib/dictBuilder/fastcover.c
+@@ -317,7 +317,6 @@ FASTCOVER_ctx_init(FASTCOVER_ctx_t* ctx, const void* samplesBuffer,
+     const size_t trainingSamplesSize = splitPoint < 1.0 ? FASTCOVER_sum(samplesSizes, nbTrainSamples) : totalSamplesSize;
+     const size_t testSamplesSize = splitPoint < 1.0 ? FASTCOVER_sum(samplesSizes + nbTrainSamples, nbTestSamples) : totalSamplesSize;
+-    ctx->displayLevel = displayLevel;
+     /* Checks */
+     if (totalSamplesSize < MAX(d, sizeof(U64)) ||
+         totalSamplesSize >= (size_t)FASTCOVER_MAX_SAMPLES_SIZE) {
+@@ -341,6 +340,8 @@ FASTCOVER_ctx_init(FASTCOVER_ctx_t* ctx, const void* samplesBuffer,
+     }
+     /* Zero the context */
+     memset(ctx, 0, sizeof(*ctx));
++    /* Must come after the memset, which would otherwise clear it */
++    ctx->displayLevel = displayLevel;
+     DISPLAYLEVEL(2, "Training on %u samples of total size %u\n", nbTrainSamples,
+                  (unsigned)trainingSamplesSize);
+     DISPLAYLEVEL(2, "Testing on %u samples of total size %u\n", nbTestSamples,
