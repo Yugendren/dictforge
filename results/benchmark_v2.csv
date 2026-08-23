@@ -101,3 +101,35 @@ E2,weblogs,19,klauspost_112640,112771,6.183879,14.623,"klauspost/compress dict/c
 E2,weblogs,19,klauspost_2097159,151658,6.194391,15.656,"klauspost/compress dict/cmd/builddict -zlevel=4 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=full_variant_winning_size; evaluated with our zstd on heldout"
 E4,weblogs,3,mem_default_train,112640,6.421379,0.467,max_rss_bytes=72466432
 E4,weblogs,19,mem_default_train,112640,8.683779,0.390,max_rss_bytes=72761344
+MAIN,apijson,3,nodict,0,1.914644,0.000,
+MAIN,apijson,3,default,112640,4.001424,1.193,zstd --train --maxdict=112640 -T8
+MAIN,apijson,3,tuned,1048576,4.246075,120.188,trainer.py --stages 1 --time-budget-s 600
+MAIN,apijson,3,full,1048576,4.246075,130.978,trainer.py --stages all --time-budget-s 600
+MAIN,apijson,3,rawconcat,112640,3.494193,0.021,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+MAIN,apijson,19,nodict,0,1.957815,0.000,
+MAIN,apijson,19,default,112640,4.592770,0.263,zstd --train --maxdict=112640 -T8
+MAIN,apijson,19,tuned,1048576,5.310197,127.208,trainer.py --stages 1 --time-budget-s 1800
+MAIN,apijson,19,full,1048583,5.355901,1317.488,trainer.py --stages all --time-budget-s 1800
+MAIN,apijson,19,rawconcat,112640,4.089016,0.030,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+E1,apijson,3,cover_16384,16384,3.881092,12.584,candidate; equal-compute budget=131.0s; accumulated=12.6s; evaluated on train-internal val split
+E1,apijson,3,cover_65536,65536,4.090861,11.768,candidate; equal-compute budget=131.0s; accumulated=24.4s; evaluated on train-internal val split
+E1,apijson,3,cover_112640,112640,4.182625,11.756,candidate; equal-compute budget=131.0s; accumulated=36.1s; evaluated on train-internal val split
+E1,apijson,3,cover_262144,262144,4.323418,11.548,candidate; equal-compute budget=131.0s; accumulated=47.7s; evaluated on train-internal val split
+E1,apijson,3,cover_524288,524288,4.377748,11.713,candidate; equal-compute budget=131.0s; accumulated=59.4s; evaluated on train-internal val split
+E1,apijson,3,cover_1048576,1048576,4.441577,11.370,candidate; equal-compute budget=131.0s; accumulated=70.7s; evaluated on train-internal val split
+E1,apijson,3,cover_2097152,2097152,4.456080,11.537,candidate; equal-compute budget=131.0s; accumulated=82.3s; evaluated on train-internal val split
+E1,apijson,3,winner,2097152,4.158511,11.537,winner=cover_2097152b (by val_ratio=4.456080); equal-compute budget=131.0s (=MAIN full train_wall_s); heldout ratio (no refit-on-full)
+E1,apijson,19,cover_16384,16384,4.241421,12.404,candidate; equal-compute budget=1317.5s; accumulated=12.4s; evaluated on train-internal val split
+E1,apijson,19,cover_65536,65536,4.616361,10.577,candidate; equal-compute budget=1317.5s; accumulated=23.0s; evaluated on train-internal val split
+E1,apijson,19,cover_112640,112640,4.766078,10.759,candidate; equal-compute budget=1317.5s; accumulated=33.7s; evaluated on train-internal val split
+E1,apijson,19,cover_262144,262144,5.046364,10.640,candidate; equal-compute budget=1317.5s; accumulated=44.4s; evaluated on train-internal val split
+E1,apijson,19,cover_524288,524288,5.314857,10.659,candidate; equal-compute budget=1317.5s; accumulated=55.0s; evaluated on train-internal val split
+E1,apijson,19,cover_1048576,1048576,5.536897,10.274,candidate; equal-compute budget=1317.5s; accumulated=65.3s; evaluated on train-internal val split
+E1,apijson,19,cover_2097152,2097152,5.809806,10.552,candidate; equal-compute budget=1317.5s; accumulated=75.9s; evaluated on train-internal val split
+E1,apijson,19,winner,2097152,5.417644,10.552,winner=cover_2097152b (by val_ratio=5.809806); equal-compute budget=1317.5s (=MAIN full train_wall_s); heldout ratio (no refit-on-full)
+E2,apijson,3,klauspost_112640,112800,3.172257,1.659,"klauspost/compress dict/cmd/builddict -zlevel=1 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=110K_default_match; evaluated with our zstd on heldout"
+E2,apijson,3,klauspost_1048576,299512,3.181950,1.924,"klauspost/compress dict/cmd/builddict -zlevel=1 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=full_variant_winning_size; evaluated with our zstd on heldout"
+E2,apijson,19,klauspost_112640,112799,3.794298,8.922,"klauspost/compress dict/cmd/builddict -zlevel=4 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=110K_default_match; evaluated with our zstd on heldout"
+E2,apijson,19,klauspost_1048583,299760,3.812685,9.182,"klauspost/compress dict/cmd/builddict -zlevel=4 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=full_variant_winning_size; evaluated with our zstd on heldout"
+E4,apijson,3,mem_default_train,112640,4.001424,0.284,max_rss_bytes=56705024
+E4,apijson,19,mem_default_train,112640,4.592770,0.243,max_rss_bytes=56328192
