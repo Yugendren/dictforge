@@ -1,0 +1,11 @@
+native/bin/*
+!native/bin/.gitkeep
+*.o
+*.pyc
+__pycache__/
+*.dict
+*.dict.meta.json
+build/
+dist/
+*.egg-info/
+.DS_Store

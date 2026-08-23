@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dictforge"
+version = "0.1.0"
+description = "A validation-driven zstd dictionary trainer: beats `zstd --train` with auto size selection, target-level awareness, and an anytime never-worse floor. Output is 100%-standard zstd dictionary format."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.8"
+authors = [
+    { name = "Yugen" },
+]
+
+[project.scripts]
+dictforge = "dictforge.train:main"
+
+# The project root doubles as the "dictforge" package itself (this file
+# lives at package/dictforge/pyproject.toml, alongside __init__.py etc).
+[tool.setuptools]
+package-dir = { "dictforge" = "." }
+packages = ["dictforge"]
+
+[tool.setuptools.package-data]
+dictforge = ["native/*.c", "build_native.sh", "LICENSE"]
