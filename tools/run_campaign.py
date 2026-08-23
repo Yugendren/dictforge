@@ -225,7 +225,11 @@ def build_default(train_dir, out_path):
 def build_trainer(train_dir, out_path, level, stages, time_budget_s):
     cmd = ["python3", str(TRAINER), "--train-dir", str(train_dir), "--out", str(out_path),
            "--target-level", str(level), "--stages", stages, "--time-budget-s", str(time_budget_s)]
-    ok, rc, out, err, wall = timed_run(cmd, timeout=time_budget_s + 900)
+    # --time-budget-s gates stage ENTRY, not stage duration: one stage-2
+    # refinement round on a 48MB corpus at L19 can itself take tens of minutes.
+    # (Measured pre-wipe: gharchive L19 --stages all ran ~4980s at budget 1800.)
+    cap = max(4 * 3600, time_budget_s * 6)
+    ok, rc, out, err, wall = timed_run(cmd, timeout=cap)
     if not ok or not out_path.exists():
         raise RuntimeError(f"trainer.py ({stages}) failed (rc={rc}): {(err or out)[-800:]}")
     return wall
@@ -503,22 +507,27 @@ def main():
     log("=== dictforge benchmark_v2 campaign starting ===")
     log(f"zstd={ZSTD} exists={ZSTD.exists()}; trainer={TRAINER} exists={TRAINER.exists()}; "
         f"builddict={BUILDDICT} exists={BUILDDICT.exists()}")
+    # A single failing cell must not abort a multi-hour campaign: record the
+    # failure as a row (so it is visible, and so resume does not silently skip
+    # it) and continue with the next experiment block.
+    failures = []
     for corpus in CORPORA:
         log(f"--- corpus: {corpus} ---")
-        for level in LEVELS:
-            done = load_done()
-            run_main(done, corpus, level)
-        for level in LEVELS:
-            done = load_done()
-            run_e1(done, corpus, level)
-        for level in LEVELS:
-            done = load_done()
-            run_e2(done, corpus, level)
-        for level in LEVELS:
-            done = load_done()
-            run_e4(done, corpus, level)
+        for name, fn in (("MAIN", run_main), ("E1", run_e1), ("E2", run_e2), ("E4", run_e4)):
+            for level in LEVELS:
+                try:
+                    fn(load_done(), corpus, level)
+                except Exception as exc:                      # noqa: BLE001
+                    msg = f"{type(exc).__name__}: {exc}"[:400]
+                    log(f"!!! {name} {corpus} L{level} FAILED, continuing: {msg}")
+                    failures.append((name, corpus, level, msg))
+                    append_row(name, corpus, level, "BLOCK_FAILED", 0, 0.0, 0.0, msg)
         git_commit(corpus)
         log(f"--- corpus DONE: {corpus} ---")
+    if failures:
+        log(f"=== campaign finished with {len(failures)} failed blocks ===")
+        for f in failures:
+            log(f"    FAILED: {f}")
     log("=== dictforge benchmark_v2 campaign COMPLETE ===")
 
 
