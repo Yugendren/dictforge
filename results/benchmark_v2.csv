@@ -42,3 +42,30 @@ MAIN,gharchive,3,rawconcat,112640,6.665436,0.158,"random files concat to 112640B
 MAIN,gharchive,19,nodict,0,3.906386,0.000,
 MAIN,gharchive,19,default,112640,8.843008,2.101,zstd --train --maxdict=112640 -T8
 MAIN,gharchive,19,tuned,2097152,11.100073,581.657,trainer.py --stages 1 --time-budget-s 1800
+MAIN,gharchive,19,full,2097152,11.334886,3352.344,trainer.py --stages all --time-budget-s 1800
+MAIN,gharchive,19,rawconcat,112640,7.747225,0.046,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+E1,gharchive,3,cover_16384,16384,6.342255,50.356,candidate; equal-compute budget=605.1s; accumulated=50.4s; evaluated on train-internal val split
+E1,gharchive,3,cover_65536,65536,7.138776,55.218,candidate; equal-compute budget=605.1s; accumulated=105.6s; evaluated on train-internal val split
+E1,gharchive,3,cover_112640,112640,7.320256,49.807,candidate; equal-compute budget=605.1s; accumulated=155.4s; evaluated on train-internal val split
+E1,gharchive,3,cover_262144,262144,7.694600,55.522,candidate; equal-compute budget=605.1s; accumulated=210.9s; evaluated on train-internal val split
+E1,gharchive,3,cover_524288,524288,7.930614,53.596,candidate; equal-compute budget=605.1s; accumulated=264.5s; evaluated on train-internal val split
+E1,gharchive,3,cover_1048576,1048576,8.361370,52.797,candidate; equal-compute budget=605.1s; accumulated=317.3s; evaluated on train-internal val split
+E1,gharchive,3,cover_2097152,2097152,8.147277,46.105,candidate; equal-compute budget=605.1s; accumulated=363.4s; evaluated on train-internal val split
+E1,gharchive,3,winner,1048576,8.443188,52.797,winner=cover_1048576b (by val_ratio=8.361370); equal-compute budget=605.1s (=MAIN full train_wall_s); heldout ratio (no refit-on-full)
+E1,gharchive,19,cover_16384,16384,7.031579,47.123,candidate; equal-compute budget=3352.3s; accumulated=47.1s; evaluated on train-internal val split
+E1,gharchive,19,cover_65536,65536,8.106944,44.724,candidate; equal-compute budget=3352.3s; accumulated=91.8s; evaluated on train-internal val split
+E1,gharchive,19,cover_112640,112640,8.466400,43.370,candidate; equal-compute budget=3352.3s; accumulated=135.2s; evaluated on train-internal val split
+E1,gharchive,19,cover_262144,262144,9.113868,44.028,candidate; equal-compute budget=3352.3s; accumulated=179.2s; evaluated on train-internal val split
+E1,gharchive,19,cover_524288,524288,9.672630,41.168,candidate; equal-compute budget=3352.3s; accumulated=220.4s; evaluated on train-internal val split
+E1,gharchive,19,cover_1048576,1048576,10.331921,43.933,candidate; equal-compute budget=3352.3s; accumulated=264.3s; evaluated on train-internal val split
+E1,gharchive,19,cover_2097152,2097152,10.946662,41.236,candidate; equal-compute budget=3352.3s; accumulated=305.6s; evaluated on train-internal val split
+E1,gharchive,19,winner,2097152,11.073734,41.236,winner=cover_2097152b (by val_ratio=10.946662); equal-compute budget=3352.3s (=MAIN full train_wall_s); heldout ratio (no refit-on-full)
+E2,gharchive,3,klauspost_112640,112800,5.644739,6.617,"klauspost/compress dict/cmd/builddict -zlevel=1 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=110K_default_match; evaluated with our zstd on heldout"
+E2,gharchive,3,klauspost_1048576,510434,5.621899,5.375,"klauspost/compress dict/cmd/builddict -zlevel=1 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=full_variant_winning_size; evaluated with our zstd on heldout"
+E2,gharchive,19,klauspost_112640,112798,6.934524,18.259,"klauspost/compress dict/cmd/builddict -zlevel=4 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=110K_default_match; evaluated with our zstd on heldout"
+E2,gharchive,19,klauspost_2097152,509669,7.031967,18.629,"klauspost/compress dict/cmd/builddict -zlevel=4 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=full_variant_winning_size; evaluated with our zstd on heldout"
+E4,gharchive,3,mem_default_train,112640,7.680314,0.565,max_rss_bytes=99614720
+E4,gharchive,3,mem_trainer_full,1048576,8.365976,544.025,"max_rss_bytes=2040954880; CAVEAT: /usr/bin/time -l on macOS reports only the traced process's own peak RSS; it does NOT aggregate memory of forked subprocesses. For mem_trainer_full this captures the python3 driver only, excluding the zstd/refine_dict/offset_hist child processes it spawns (likely the dominant consumer). mem_default_train and mem_batch_* trace a single zstd process directly and are NOT subject to this gap."
+E4,gharchive,3,mem_batch_default,112640,7.680314,0.546,single batch-compress of heldout with default dict; max_rss_bytes=3981312
+E4,gharchive,3,mem_batch_full,1048576,8.403468,0.583,single batch-compress of heldout with full dict; max_rss_bytes=6012928
+E4,gharchive,19,mem_default_train,112640,8.843008,1.880,max_rss_bytes=98123776
