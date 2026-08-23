@@ -69,3 +69,35 @@ E4,gharchive,3,mem_trainer_full,1048576,8.365976,544.025,"max_rss_bytes=20409548
 E4,gharchive,3,mem_batch_default,112640,7.680314,0.546,single batch-compress of heldout with default dict; max_rss_bytes=3981312
 E4,gharchive,3,mem_batch_full,1048576,8.403468,0.583,single batch-compress of heldout with full dict; max_rss_bytes=6012928
 E4,gharchive,19,mem_default_train,112640,8.843008,1.880,max_rss_bytes=98123776
+MAIN,weblogs,3,nodict,0,3.520614,0.000,
+MAIN,weblogs,3,default,112640,6.421379,1.581,zstd --train --maxdict=112640 -T8
+MAIN,weblogs,3,tuned,1048576,7.320480,253.120,trainer.py --stages 1 --time-budget-s 600
+MAIN,weblogs,3,full,1048576,7.342766,349.944,trainer.py --stages all --time-budget-s 600
+MAIN,weblogs,3,rawconcat,112640,5.269548,0.036,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+MAIN,weblogs,19,nodict,0,3.788071,0.000,
+MAIN,weblogs,19,default,112640,8.683779,1.353,zstd --train --maxdict=112640 -T8
+MAIN,weblogs,19,tuned,2097152,10.692148,297.644,trainer.py --stages 1 --time-budget-s 1800
+MAIN,weblogs,19,full,2097159,11.473408,2500.877,trainer.py --stages all --time-budget-s 1800
+MAIN,weblogs,19,rawconcat,112640,7.206095,0.074,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+E1,weblogs,3,cover_16384,16384,5.875508,26.688,candidate; equal-compute budget=349.9s; accumulated=26.7s; evaluated on train-internal val split
+E1,weblogs,3,cover_65536,65536,6.341741,25.497,candidate; equal-compute budget=349.9s; accumulated=52.2s; evaluated on train-internal val split
+E1,weblogs,3,cover_112640,112640,6.523347,22.905,candidate; equal-compute budget=349.9s; accumulated=75.1s; evaluated on train-internal val split
+E1,weblogs,3,cover_262144,262144,6.982574,24.060,candidate; equal-compute budget=349.9s; accumulated=99.1s; evaluated on train-internal val split
+E1,weblogs,3,cover_524288,524288,7.101593,24.675,candidate; equal-compute budget=349.9s; accumulated=123.8s; evaluated on train-internal val split
+E1,weblogs,3,cover_1048576,1048576,7.347022,26.367,candidate; equal-compute budget=349.9s; accumulated=150.2s; evaluated on train-internal val split
+E1,weblogs,3,cover_2097152,1078297,6.443077,28.202,candidate; equal-compute budget=349.9s; accumulated=178.4s; evaluated on train-internal val split
+E1,weblogs,3,winner,1048576,7.320480,26.367,winner=cover_1048576b (by val_ratio=7.347022); equal-compute budget=349.9s (=MAIN full train_wall_s); heldout ratio (no refit-on-full)
+E1,weblogs,19,cover_16384,16384,7.181600,25.143,candidate; equal-compute budget=2500.9s; accumulated=25.1s; evaluated on train-internal val split
+E1,weblogs,19,cover_65536,65536,8.432515,25.095,candidate; equal-compute budget=2500.9s; accumulated=50.2s; evaluated on train-internal val split
+E1,weblogs,19,cover_112640,112640,8.862406,25.299,candidate; equal-compute budget=2500.9s; accumulated=75.5s; evaluated on train-internal val split
+E1,weblogs,19,cover_262144,262144,9.515806,24.414,candidate; equal-compute budget=2500.9s; accumulated=100.0s; evaluated on train-internal val split
+E1,weblogs,19,cover_524288,524288,10.118195,24.236,candidate; equal-compute budget=2500.9s; accumulated=124.2s; evaluated on train-internal val split
+E1,weblogs,19,cover_1048576,1048576,10.599000,27.575,candidate; equal-compute budget=2500.9s; accumulated=151.8s; evaluated on train-internal val split
+E1,weblogs,19,cover_2097152,1074170,8.539327,28.645,candidate; equal-compute budget=2500.9s; accumulated=180.4s; evaluated on train-internal val split
+E1,weblogs,19,winner,1048576,10.578856,27.575,winner=cover_1048576b (by val_ratio=10.599000); equal-compute budget=2500.9s (=MAIN full train_wall_s); heldout ratio (no refit-on-full)
+E2,weblogs,3,klauspost_112640,112769,4.943054,3.807,"klauspost/compress dict/cmd/builddict -zlevel=1 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=110K_default_match; evaluated with our zstd on heldout"
+E2,weblogs,3,klauspost_1048576,151749,4.739730,2.651,"klauspost/compress dict/cmd/builddict -zlevel=1 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=full_variant_winning_size; evaluated with our zstd on heldout"
+E2,weblogs,19,klauspost_112640,112771,6.183879,14.623,"klauspost/compress dict/cmd/builddict -zlevel=4 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=110K_default_match; evaluated with our zstd on heldout"
+E2,weblogs,19,klauspost_2097159,151658,6.194391,15.656,"klauspost/compress dict/cmd/builddict -zlevel=4 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=full_variant_winning_size; evaluated with our zstd on heldout"
+E4,weblogs,3,mem_default_train,112640,6.421379,0.467,max_rss_bytes=72466432
+E4,weblogs,19,mem_default_train,112640,8.683779,0.390,max_rss_bytes=72761344
