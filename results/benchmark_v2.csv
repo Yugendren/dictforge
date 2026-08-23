@@ -133,3 +133,30 @@ E2,apijson,19,klauspost_112640,112799,3.794298,8.922,"klauspost/compress dict/cm
 E2,apijson,19,klauspost_1048583,299760,3.812685,9.182,"klauspost/compress dict/cmd/builddict -zlevel=4 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=full_variant_winning_size; evaluated with our zstd on heldout"
 E4,apijson,3,mem_default_train,112640,4.001424,0.284,max_rss_bytes=56705024
 E4,apijson,19,mem_default_train,112640,4.592770,0.243,max_rss_bytes=56328192
+MAIN,csvrows,3,nodict,0,4.342041,0.000,
+MAIN,csvrows,3,default,112640,6.190407,3.218,zstd --train --maxdict=112640 -T8
+MAIN,csvrows,3,tuned,1048576,6.613244,601.008,trainer.py --stages 1 --time-budget-s 600
+MAIN,csvrows,3,full,1048576,6.605505,604.474,trainer.py --stages all --time-budget-s 600
+MAIN,csvrows,3,rawconcat,112640,5.391735,0.033,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+MAIN,csvrows,19,nodict,0,4.977376,0.000,
+MAIN,csvrows,19,default,112640,8.170173,1.907,zstd --train --maxdict=112640 -T8
+MAIN,csvrows,19,tuned,2097152,10.206285,1684.558,trainer.py --stages 1 --time-budget-s 1800
+MAIN,csvrows,19,full,2097143,10.471400,3534.819,trainer.py --stages all --time-budget-s 1800
+MAIN,csvrows,19,rawconcat,112640,6.772007,0.047,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+E1,csvrows,3,cover_16384,16384,5.481773,399.614,candidate; equal-compute budget=604.5s; accumulated=399.6s; evaluated on train-internal val split
+E1,csvrows,3,cover_65536,65536,6.047037,387.358,candidate; equal-compute budget=604.5s; accumulated=787.0s; evaluated on train-internal val split
+E1,csvrows,3,winner,65536,6.034724,387.358,winner=cover_65536b (by val_ratio=6.047037); equal-compute budget=604.5s (=MAIN full train_wall_s); heldout ratio (no refit-on-full)
+E1,csvrows,19,cover_16384,16384,6.668991,402.145,candidate; equal-compute budget=3534.8s; accumulated=402.1s; evaluated on train-internal val split
+E1,csvrows,19,cover_65536,65536,7.712055,390.504,candidate; equal-compute budget=3534.8s; accumulated=792.6s; evaluated on train-internal val split
+E1,csvrows,19,cover_112640,112640,8.140973,356.276,candidate; equal-compute budget=3534.8s; accumulated=1148.9s; evaluated on train-internal val split
+E1,csvrows,19,cover_262144,262144,8.785082,378.932,candidate; equal-compute budget=3534.8s; accumulated=1527.9s; evaluated on train-internal val split
+E1,csvrows,19,cover_524288,524288,9.283709,391.914,candidate; equal-compute budget=3534.8s; accumulated=1919.8s; evaluated on train-internal val split
+E1,csvrows,19,cover_1048576,1048576,9.826604,424.451,candidate; equal-compute budget=3534.8s; accumulated=2344.2s; evaluated on train-internal val split
+E1,csvrows,19,cover_2097152,2097152,10.321759,415.627,candidate; equal-compute budget=3534.8s; accumulated=2759.8s; evaluated on train-internal val split
+E1,csvrows,19,winner,2097152,10.302743,415.627,winner=cover_2097152b (by val_ratio=10.321759); equal-compute budget=3534.8s (=MAIN full train_wall_s); heldout ratio (no refit-on-full)
+E2,csvrows,3,klauspost_112640,112785,5.295591,47.752,"klauspost/compress dict/cmd/builddict -zlevel=1 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=110K_default_match; evaluated with our zstd on heldout"
+E2,csvrows,3,klauspost_1048576,585579,5.226575,46.981,"klauspost/compress dict/cmd/builddict -zlevel=1 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=full_variant_winning_size; evaluated with our zstd on heldout"
+E2,csvrows,19,klauspost_112640,112784,6.754677,56.307,"klauspost/compress dict/cmd/builddict -zlevel=4 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=110K_default_match; evaluated with our zstd on heldout"
+E2,csvrows,19,klauspost_2097143,585581,6.829071,58.173,"klauspost/compress dict/cmd/builddict -zlevel=4 (approx map: L3->1(fastest) L19->4(best); klauspost only exposes speeds 0-4, not zstd's 1-22 CLI scale); size_source=full_variant_winning_size; evaluated with our zstd on heldout"
+E4,csvrows,3,mem_default_train,112640,6.190407,2.510,max_rss_bytes=317014016
+E4,csvrows,19,mem_default_train,112640,8.170173,1.936,max_rss_bytes=316309504
