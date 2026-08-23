@@ -41,6 +41,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
+# A candidate counts as degenerate when it emitted materially less than the
+# budget requested; same threshold the trainer uses for its own guard.
+DEGENERACY_FRAC = 0.90
+
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parent
 DEFAULT_CSV = REPO_ROOT / "results" / "benchmark_v2.csv"
@@ -168,6 +172,11 @@ def make_f1_cliff(rows, out_dir, color_map):
         family = variant_family(crows[0]["variant"])
         base_color = color_for(crows[0]["variant"], color_map)
 
+        # The candidate dictionaries are trained once and merely *evaluated* at
+        # each level, so emitted size is level-independent: plot it once, and
+        # one ratio curve per evaluation level.
+        emitted_drawn = False
+        degenerate_drawn = False
         for level in levels:
             lrows = sorted((r for r in crows if r["level"] == level),
                             key=lambda r: variant_requested_size(r["variant"]))
@@ -176,17 +185,25 @@ def make_f1_cliff(rows, out_dir, color_map):
             ratio = [r["ratio"] for r in lrows]
             ls = linestyle_for(level)
 
-            ax.plot(req, emitted, color=base_color, linestyle=ls, marker="o",
-                     label=f"emitted dict_size (L{level})")
+            if not emitted_drawn:
+                ax.plot(req, emitted, color=base_color, linestyle="-", marker="o",
+                        label="emitted dict_size")
+                emitted_drawn = True
             ax2.plot(req, ratio, color=base_color, linestyle=ls, marker="x",
                       alpha=0.55, label=f"ratio (L{level})")
 
-            degenerate = [(r_, e_) for r_, e_, r in zip(req, emitted, lrows)
-                          if "degenerate" in r["note"].lower()]
-            if degenerate:
+            # Degeneracy is derived from the measurements, not from note text:
+            # a build is degenerate when it emitted materially less than the
+            # budget it was asked for. (The runner records both numbers but
+            # does not annotate the note, so trusting the note under-reports.)
+            degenerate = [(r_, e_) for r_, e_ in zip(req, emitted)
+                          if r_ and e_ < DEGENERACY_FRAC * r_]
+            if degenerate and not degenerate_drawn:
                 dx, dy = zip(*degenerate)
                 ax.scatter(dx, dy, facecolors="none", edgecolors="red", s=140,
-                           linewidths=1.6, zorder=5, label="degenerate (note)")
+                           linewidths=1.6, zorder=5,
+                           label=f"degenerate (emitted < {DEGENERACY_FRAC:.0%} of request)")
+                degenerate_drawn = True
 
         ax.set_xscale("log", base=2)
         ax.set_xlabel("requested dictionary budget (bytes, log2)")
