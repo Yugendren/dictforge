@@ -34,3 +34,11 @@ E4,github_users,3,mem_trainer_full,1048576,9.944199,41.354,"max_rss_bytes=263897
 E4,github_users,3,mem_batch_default,112640,9.646165,0.231,single batch-compress of heldout with default dict; max_rss_bytes=2834432
 E4,github_users,3,mem_batch_full,1048576,9.944199,0.232,single batch-compress of heldout with full dict; max_rss_bytes=4145152
 E4,github_users,19,mem_default_train,112640,9.955016,0.146,max_rss_bytes=51658752
+MAIN,gharchive,3,nodict,0,3.741217,0.000,
+MAIN,gharchive,3,default,112640,7.680314,2.269,zstd --train --maxdict=112640 -T8
+MAIN,gharchive,3,tuned,1048576,8.443188,527.009,trainer.py --stages 1 --time-budget-s 600
+MAIN,gharchive,3,full,1048576,8.403468,605.078,trainer.py --stages all --time-budget-s 600
+MAIN,gharchive,3,rawconcat,112640,6.665436,0.158,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+MAIN,gharchive,19,nodict,0,3.906386,0.000,
+MAIN,gharchive,19,default,112640,8.843008,2.101,zstd --train --maxdict=112640 -T8
+MAIN,gharchive,19,tuned,2097152,11.100073,581.657,trainer.py --stages 1 --time-budget-s 1800
