@@ -72,8 +72,9 @@ first mechanistic diagnosis of its behavior on real corpora, identifying
 three defects: (1) \emph{budget degeneracy} -- past internal caps,
 requesting a larger dictionary silently yields a smaller one, collapsing
 compression ratio by up to 28\% in step-function drops on zstd's own
-benchmark corpus (consistent with, though smaller than, a well-known
-unresolved issue report~\cite{zstdissue4127}); (2) \emph{size blindness}
+benchmark corpus (consistent with, though smaller than, the
+size-sensitivity practitioners have reported
+upstream~\cite{zstdissue4127}); (2) \emph{size blindness}
 -- the trainer never searches dictionary size, though the optimal size
 varies by two orders of magnitude across corpora and the default budget
 leaves 2--22\% compression on the table; (3) \emph{level blindness} --
@@ -513,12 +514,16 @@ chunking work (FastCDC~\cite{xia2016fastcdc}) and string/columnar
 compressors (FSST~\cite{boncz2020fsst}, ALP~\cite{afroozeh2024alp},
 BtrBlocks~\cite{kuschewski2023btrblocks}) bound the broader
 small-record/columnar compression space we sit adjacent to, alongside
-recent DCC dictionary-adjacent work (Machete~\cite{machete2024},
-LZHV~\cite{lzhv2025}). Brotli's ``durchschlag'' dictionary generator and
+recent DCC work on domain-specific compressors
+(Machete~\cite{machete2024}) and LZ77 acceleration
+(LZHV~\cite{lzhv2025}). Brotli's ``durchschlag'' dictionary generator and
 format~\cite{rfc9841,alakuijala2019brotli} is the cross-codec transfer
 target in \S\ref{sec:evaluation-cross-codec}. The Relative Lempel-Ziv
 line~\cite{hoobin2011rlz,puglisi2023rlz} positions our refinement stage
 (\S\ref{sec:design-stage2}) as an adaptation of RLZ pruning ideas.
+Niesen's information-theoretic analysis of
+deduplication~\cite{niesen2019dedup} supplies the theoretical framing
+for chunk-boundary synchronization.
 \texttt{zstd}'s own \texttt{--paramgrill} tuner and Meta's managed-
 compression engineering blog~\cite{metaengineering2018zstd} disclose
 parameter tuning that was never formally published. OpenZL~\cite{openzl}
@@ -530,7 +535,8 @@ citations vs 607 vendored copies -- absorbed nameless); klauspost
 builddict (-zlevel flag = prior level-targeting, parity claimed at
 best, MUST cite + benchmark); brotli durchschlag; RLZ line (Puglisi et
 al.; refinement positioned as adaptation of RLZ pruning ideas); Niesen
-dedup theory (TODO: find/add citation, not yet in references.bib);
+dedup theory (\cite{niesen2019dedup}, IEEE Trans.\ IT 65(9), now in
+references.bib);
 paramgrill + Meta managed-compression blog (parameter tuning disclosed,
 never published); OpenZL (heavyweight alternative direction).}
 % COVER/WWW16 (16 citations vs 607 vendored copies — absorbed nameless);

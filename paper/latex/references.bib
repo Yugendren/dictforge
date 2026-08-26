@@ -1,213 +1,378 @@
 % references.bib -- dictforge / DCC submission
 %
-% Entries marked "TODO verify" have bibliographic details filled in from
-% recollection rather than a fresh lookup against the publisher record;
-% double-check title wording, author order, page/article numbers, and
-% (for the two DCC entries) the actual proceedings citation before
-% submission.
+% CITATION-INTEGRITY PASS, 2026-08-27.
+% Every entry below was checked against an authoritative record (DBLP,
+% Crossref, ACM DL, Dagstuhl DROPS, RFC Editor, arXiv, GitHub API).
+% Entries that could not be fully confirmed carry an explicit
+% "% UNVERIFIED:" comment stating exactly what is unconfirmed and why.
+% There are no remaining "TODO verify" placeholders.
 
+% Verified: DBLP conf/www/LiaoPMW16 + Crossref.
+% NOTE: first author is Kewen Liao (an earlier draft of this file said
+% "Sheng Liao", which was wrong).
 @inproceedings{liao2016cover,
-  author    = {Liao, Sheng and Petri, Matthias and Moffat, Alistair and Wirth, Anthony},
+  author    = {Liao, Kewen and Petri, Matthias and Moffat, Alistair and Wirth, Anthony},
   title     = {Effective Construction of Relative {Lempel}-{Ziv} Dictionaries},
   booktitle = {Proceedings of the 25th International Conference on World Wide Web (WWW)},
   year      = {2016},
   pages     = {807--816},
+  publisher = {International World Wide Web Conferences Steering Committee},
+  address   = {Montr\'eal, Qu\'ebec, Canada},
   doi       = {10.1145/2872427.2883042},
   note      = {COVER / fastCOVER dictionary-construction algorithm underlying \texttt{zstd --train}}
 }
 
+% Verified: RFC Editor (rfc-editor.org/info/rfc8878). Informational,
+% February 2021, obsoletes RFC 8478. Editor is Murray S. Kucherawy.
 @misc{rfc8878,
-  author       = {Collet, Yann and Kucherawy, Murray},
+  author       = {Collet, Yann and Kucherawy, Murray S.},
   title        = {{Zstandard} Compression and the \texttt{application/zstd} Media Type},
-  howpublished = {RFC 8878},
+  howpublished = {RFC 8878, Informational},
   publisher    = {RFC Editor},
   year         = {2021},
   month        = feb,
   doi          = {10.17487/RFC8878},
   url          = {https://www.rfc-editor.org/rfc/rfc8878},
-  urldate      = {2026-08-27}
+  urldate      = {2026-08-27},
+  note         = {Obsoletes RFC 8478}
 }
 
+% Verified: RFC Editor (rfc-editor.org/rfc/rfc9841.txt), September 2025.
+% NOTE: this RFC is "SHARED Brotli Compressed Data Format" -- it is the
+% dictionary-aware brotli format, and it UPDATES (does not obsolete)
+% RFC 7932, which remains the base Brotli format. An earlier draft of
+% this file had the title, the author list, and the obsoletes/updates
+% relationship all wrong.
 @misc{rfc9841,
-  author       = {Alakuijala, Jyrki and Szabadka, Zoltan},
-  title        = {Brotli Compressed Data Format},
-  howpublished = {RFC 9841},
+  author       = {Alakuijala, Jyrki and Duong, Thai and Kliuchnikov, Evgenii
+                  and Szabadka, Zoltan and Vandevenne, Lode},
+  title        = {Shared {Brotli} Compressed Data Format},
+  howpublished = {RFC 9841, Informational},
   publisher    = {RFC Editor},
   year         = {2025},
+  month        = sep,
   doi          = {10.17487/RFC9841},
   url          = {https://www.rfc-editor.org/rfc/rfc9841},
   urldate      = {2026-08-27},
-  note         = {Obsoletes RFC 7932}
+  note         = {Updates RFC 7932 (base {Brotli} format)}
 }
 
+% Verified: DBLP journals/tois/AlakuijalaFFKOS19 + Crossref.
+% Article 4, pages 4:1--4:30.
 @article{alakuijala2019brotli,
-  author  = {Alakuijala, Jyrki and Farruggia, Andrea and Ferragina, Paolo and Kliuchnikov, Eugene and Obryk, Robert and Szabadka, Zoltan and Vandevenne, Lode},
+  author  = {Alakuijala, Jyrki and Farruggia, Andrea and Ferragina, Paolo
+             and Kliuchnikov, Eugene and Obryk, Robert and Szabadka, Zoltan
+             and Vandevenne, Lode},
   title   = {Brotli: A General-Purpose Data Compressor},
-  journal = {ACM Transactions on Information Systems},
+  journal = {ACM Transactions on Information Systems (TOIS)},
   volume  = {37},
   number  = {1},
   articleno = {4},
+  pages   = {4:1--4:30},
   year    = {2019},
+  publisher = {ACM},
   doi     = {10.1145/3231935}
 }
 
+% Verified: DBLP conf/usenix/XiaZJFHHLZ16 + USENIX ATC '16 proceedings.
+% NOTE: the author list here is the ATC'16 one. An earlier draft of this
+% file used the author list of the LATER extended TPDS version (which
+% adds Douglis, Shilane and Fu); that was wrong for this citation.
+% No DOI is assigned by USENIX for ATC'16 papers.
 @inproceedings{xia2016fastcdc,
-  author    = {Xia, Wen and Jiang, Hong and Feng, Dan and Douglis, Fred and Shilane, Philip and Hua, Yu and Fu, Min and Zhang, Yucheng and Zhou, Yukun},
+  author    = {Xia, Wen and Zhou, Yukun and Jiang, Hong and Feng, Dan
+               and Hua, Yu and Hu, Yuchong and Liu, Qing and Zhang, Yucheng},
   title     = {{FastCDC}: A Fast and Efficient Content-Defined Chunking Approach for Data Deduplication},
-  booktitle = {Proceedings of the 2016 USENIX Annual Technical Conference (ATC)},
+  booktitle = {Proceedings of the 2016 USENIX Annual Technical Conference (USENIX ATC)},
   year      = {2016},
-  pages     = {101--114}
+  pages     = {101--114},
+  publisher = {USENIX Association},
+  address   = {Denver, CO, USA},
+  url       = {https://www.usenix.org/conference/atc16/technical-sessions/presentation/xia},
+  urldate   = {2026-08-27}
 }
 
+% Verified: Crossref + DBLP journals/pvldb/BonczNL20.
 @article{boncz2020fsst,
   author  = {Boncz, Peter and Neumann, Thomas and Leis, Viktor},
   title   = {{FSST}: Fast Random Access String Compression},
-  journal = {Proceedings of the VLDB Endowment},
+  journal = {Proceedings of the VLDB Endowment (PVLDB)},
   volume  = {13},
   number  = {12},
   pages   = {2649--2661},
   year    = {2020},
+  publisher = {VLDB Endowment},
   doi     = {10.14778/3407790.3407851}
 }
 
+% Verified: Crossref 10.1145/3626717 + DBLP journals/pacmmod/AfroozehKB23.
+% NOTE: ALP was PUBLISHED in PACMMOD vol. 1, issue 4 (December 2023),
+% Article 230, and PRESENTED at SIGMOD 2024. The canonical citation is
+% therefore the 2023 PACMMOD record, not a 2024 one. An earlier draft of
+% this file had a garbled author list ("Kuschewski, Peter Boncz"), the
+% wrong volume/number/article number, the wrong year, and a wrong DOI.
+% The bibtex key is left as-is to avoid churn in main.tex.
 @article{afroozeh2024alp,
-  author  = {Afroozeh, Azim and Kuschewski, Peter Boncz and Boncz, Peter},
-  title   = {{ALP}: Adaptive Lossless Floating-Point Compression},
-  journal = {Proceedings of the ACM on Management of Data (SIGMOD)},
-  volume  = {2},
-  number  = {3},
-  articleno = {184},
-  year    = {2024},
-  doi     = {10.1145/3654934},
-  note    = {TODO verify author list/order against SIGMOD 2024 record}
+  author  = {Afroozeh, Azim and Kuff{\'o}, Leonardo X. and Boncz, Peter},
+  title   = {{ALP}: Adaptive Lossless floating-Point Compression},
+  journal = {Proceedings of the ACM on Management of Data (PACMMOD)},
+  volume  = {1},
+  number  = {4},
+  articleno = {230},
+  pages   = {230:1--230:26},
+  year    = {2023},
+  publisher = {ACM},
+  doi     = {10.1145/3626717},
+  note    = {Presented at ACM SIGMOD 2024}
 }
 
+% Verified: Crossref 10.1145/3589263 + DBLP journals/pacmmod/KuschewskiSAL23.
 @article{kuschewski2023btrblocks,
   author  = {Kuschewski, Maximilian and Sauerwein, David and Alhomssi, Adnan and Leis, Viktor},
   title   = {{BtrBlocks}: Efficient Columnar Compression for Data Lakes},
-  journal = {Proceedings of the ACM on Management of Data (SIGMOD)},
+  journal = {Proceedings of the ACM on Management of Data (PACMMOD)},
   volume  = {1},
   number  = {2},
   articleno = {118},
+  pages   = {118:1--118:26},
   year    = {2023},
-  doi     = {10.1145/3589263}
+  publisher = {ACM},
+  doi     = {10.1145/3589263},
+  note    = {Presented at ACM SIGMOD 2023}
 }
 
+% Verified: DBLP conf/dcc/ShiZCJTDCX24 + IEEE Xplore document 10533743.
+% NOTE: the previous title in this file ("Machete: Fast, Streaming
+% Dictionary Compression for Columnar Data") was a misremembering.
+% Machete is a LOSSY FLOATING-POINT compressor for time-series
+% databases, NOT a dictionary compressor -- check that the sentence
+% citing it in \S7 describes it correctly.
 @inproceedings{machete2024,
-  author    = {TODO -- verify author list},
-  title     = {Machete: Fast, Streaming Dictionary Compression for Columnar Data},
+  author    = {Shi, Yang and Zou, Xiangyu and Chen, Xinyu and Jin, Sian
+               and Tao, Dingwen and Deng, Cai and Chen, Yufan and Xia, Wen},
+  title     = {Machete: An Efficient Lossy Floating-Point Compressor Designed for Time Series Databases},
   booktitle = {Proceedings of the 2024 Data Compression Conference (DCC)},
   year      = {2024},
+  pages     = {532--541},
   publisher = {IEEE},
-  note      = {TODO verify: title/authors reconstructed from memory, confirm against DCC 2024 proceedings before submission}
+  doi       = {10.1109/DCC58796.2024.00061}
 }
 
+% Verified: DBLP conf/dcc/YeWLZZ25.
 @inproceedings{lzhv2025,
-  author    = {TODO -- verify author list},
-  title     = {{LZHV}: TODO verify full title},
+  author    = {Ye, Guodong and Wang, Tianyi and Liu, Xin and Zhou, Rui and Zhou, Qingguo},
+  title     = {{LZHV}: Accelerating {LZ77} Compression Algorithm with Hash Verification},
   booktitle = {Proceedings of the 2025 Data Compression Conference (DCC)},
   year      = {2025},
+  pages     = {133--142},
   publisher = {IEEE},
-  note      = {TODO verify: title/authors reconstructed from memory, confirm against DCC 2025 proceedings before submission}
+  doi       = {10.1109/DCC62719.2025.00021}
 }
 
+% Verified: Crossref 10.1145/322344.322346.
 @article{storer1982textual,
   author  = {Storer, James A. and Szymanski, Thomas G.},
   title   = {Data Compression via Textual Substitution},
-  journal = {Journal of the ACM},
+  journal = {Journal of the ACM (JACM)},
   volume  = {29},
   number  = {4},
   pages   = {928--951},
   year    = {1982},
+  publisher = {ACM},
   doi     = {10.1145/322344.322346}
 }
 
+% Verified: Crossref 10.1109/TIT.2005.850116 + DBLP.
+% NOTE: the final author styles his name in lowercase as "abhi shelat";
+% it is braced here so BibTeX reproduces it verbatim rather than
+% "Shelat, A.".
 @article{charikar2005smallestgrammar,
-  author  = {Charikar, Moses and Lehman, Eric and Liu, Ding and Panigrahy, Rina and Prabhakaran, Manoj and Sahai, Amit and Shelat, Abhi},
+  author  = {Charikar, Moses and Lehman, Eric and Liu, Ding and Panigrahy, Rina
+             and Prabhakaran, Manoj and Sahai, Amit and {abhi shelat}},
   title   = {The Smallest Grammar Problem},
   journal = {IEEE Transactions on Information Theory},
   volume  = {51},
   number  = {7},
   pages   = {2554--2576},
   year    = {2005},
+  publisher = {IEEE},
   doi     = {10.1109/TIT.2005.850116}
 }
 
-@inproceedings{casel2019grammar,
-  author    = {Casel, Katrin and Fernau, Henning and Gaspers, Serge and Gras, Benjamin and Schmid, Markus L.},
-  title     = {On the Complexity of Grammar-Based Compression over Fixed Alphabets},
-  booktitle = {Proceedings of the 46th International Colloquium on Automata, Languages, and Programming (ICALP)},
-  year      = {2019},
-  note      = {TODO verify: check this is the intended Casel et al.\ smallest-grammar-hardness reference}
+% Verified: DBLP journals/mst/CaselFGGS21 + Springer 10.1007/s00224-020-10013-w.
+% NOTE: this is the JOURNAL version (Theory of Computing Systems 65(2),
+% 2021), whose title differs from the ICALP 2016 conference version
+% ("On the Complexity of Grammar-Based Compression over Fixed
+% Alphabets", ICALP 2016, LIPIcs 55, 122:1--122:14,
+% doi:10.4230/LIPIcs.ICALP.2016.122). An earlier draft of this file
+% cited it as ICALP *2019*, which does not exist -- there is no 2019
+% Casel et al. grammar paper. The journal version is cited here because
+% it is the definitive, refereed statement of the fixed-alphabet
+% hardness results. The bibtex key is left as "casel2019grammar" to
+% avoid churn in main.tex, despite the 2021 year.
+@article{casel2019grammar,
+  author  = {Casel, Katrin and Fernau, Henning and Gaspers, Serge
+             and Gras, Benjamin and Schmid, Markus L.},
+  title   = {On the Complexity of the Smallest Grammar Problem over Fixed Alphabets},
+  journal = {Theory of Computing Systems},
+  volume  = {65},
+  number  = {2},
+  pages   = {344--409},
+  year    = {2021},
+  publisher = {Springer},
+  doi     = {10.1007/s00224-020-10013-w},
+  note    = {Journal version of the ICALP 2016 paper ``On the Complexity of
+             Grammar-Based Compression over Fixed Alphabets''}
 }
 
+% Verified: Crossref 10.14778/2078331.2078341 + DBLP journals/pvldb/HoobinPZ11.
 @article{hoobin2011rlz,
   author  = {Hoobin, Christopher and Puglisi, Simon J. and Zobel, Justin},
   title   = {Relative {Lempel}-{Ziv} Factorization for Efficient Storage and Retrieval of Web Collections},
-  journal = {Proceedings of the VLDB Endowment},
+  journal = {Proceedings of the VLDB Endowment (PVLDB)},
   volume  = {5},
   number  = {3},
   pages   = {265--273},
   year    = {2011},
+  publisher = {VLDB Endowment},
   doi     = {10.14778/2078331.2078341}
 }
 
+% Verified: Dagstuhl DROPS 10.4230/LIPIcs.SEA.2023.18.
+% NOTE: the previous entry was a placeholder. The actual SEA 2023 RLZ
+% paper is "Hierarchical Relative Lempel-Ziv Compression" by Bille,
+% G\o{}rtz, Puglisi and Tarnow (Puglisi is an author, as guessed, but
+% not first author).
 @inproceedings{puglisi2023rlz,
-  author    = {TODO -- verify author list, likely Puglisi group},
-  title     = {TODO verify full title -- recent Relative {Lempel}-{Ziv} refinement/parsing improvement},
-  booktitle = {Proceedings of the 21st Symposium on Experimental Algorithms (SEA)},
+  author    = {Bille, Philip and G{\o}rtz, Inge Li and Puglisi, Simon J. and Tarnow, Simon R.},
+  title     = {Hierarchical Relative {Lempel}-{Ziv} Compression},
+  booktitle = {Proceedings of the 21st International Symposium on Experimental Algorithms (SEA)},
+  series    = {Leibniz International Proceedings in Informatics (LIPIcs)},
+  volume    = {265},
   year      = {2023},
-  note      = {TODO verify: title/authors reconstructed from memory, confirm against SEA 2023 proceedings before submission}
+  pages     = {18:1--18:16},
+  publisher = {Schloss Dagstuhl -- Leibniz-Zentrum f{\"u}r Informatik},
+  doi       = {10.4230/LIPIcs.SEA.2023.18}
 }
 
+% Verified: GitHub API (user "klauspost" real name is "Klaus Post") and
+% the source of dict/cmd/builddict/main.go on master, which does define
+% a "-zlevel" flag ("Zstd compression level. 0-4"), confirming the
+% level-targeting claim made in \S7.
+% UNVERIFIED: the repository has no formal release/version tied to the
+% "2024" year field below; the year is the access-era approximation for
+% a continuously-developed repository rather than a publication date,
+% and no upstream record fixes it.
 @misc{klauspost,
-  author       = {Backman, Klaus Post},
-  title        = {klauspost/compress: Optimized Compression Packages for {Go}},
+  author       = {Post, Klaus},
+  title        = {\texttt{klauspost/compress}: Optimized Compression Packages for {Go}},
   howpublished = {GitHub repository},
   year         = {2024},
   url          = {https://github.com/klauspost/compress},
   urldate      = {2026-08-27},
-  note         = {\texttt{dict/cmd/builddict} zstd dictionary trainer, cited for its \texttt{-zlevel} level-targeting flag; benchmarked as baseline E2}
+  note         = {\texttt{dict/cmd/builddict} zstd dictionary trainer, cited for its
+                  \texttt{-zlevel} level-targeting flag; benchmarked as baseline E2}
 }
 
+% Verified: GitHub REST API for facebook/zstd issue 4127.
+% NOTE: the real title, author and status differ substantially from the
+% previous entry. The issue is titled "[Help Wanted, Questions]
+% Improving Dictionary Training Process", was opened by GitHub user
+% neiljohari (Roblox) on 2024-08-15, and was CLOSED as completed on
+% 2024-12-09. It is a help request about dictionary-training parameters
+% that reports dictionary size strongly affecting compression ratio; it
+% is NOT an open/unresolved bug report about "--train producing a
+% smaller-than-requested dictionary". The \S1 sentence describing it as
+% a "well-known unresolved issue report" needs rewording.
 @misc{zstdissue4127,
-  author       = {{zstd contributors}},
-  title        = {Issue \#4127: {zstd --train} produces a smaller-than-requested dictionary above a size threshold},
-  howpublished = {GitHub Issue, facebook/zstd},
+  author       = {Johari, Neil},
+  title        = {[Help Wanted, Questions] Improving Dictionary Training Process},
+  howpublished = {GitHub issue \#4127, \texttt{facebook/zstd}},
   year         = {2024},
+  month        = aug,
   url          = {https://github.com/facebook/zstd/issues/4127},
   urldate      = {2026-08-27},
-  note         = {Unresolved upstream report of the budget-degeneracy symptom this paper diagnoses; TODO confirm issue number/title against the live tracker}
+  note         = {Opened 2024-08-15, closed 2024-12-09}
 }
 
+% Verified: engineering.fb.com post of 2018-12-19.
+% NOTE: the previous title ("Smaller and Faster Data Compression with
+% Zstandard") belongs to a DIFFERENT, earlier (2016) Facebook
+% Engineering post. The post at this URL is the 2018 one, whose \S5
+% "Managed Compression" is the material actually relied on in \S7.
 @misc{metaengineering2018zstd,
-  author       = {{Meta Engineering}},
-  title        = {Smaller and Faster Data Compression with {Zstandard}},
-  howpublished = {Meta (Facebook) Engineering Blog},
+  author       = {Handte, Felix and Collet, Yann and Terrell, Nick},
+  title        = {5 Ways {Facebook} Improved Compression at Scale with {Zstandard}},
+  howpublished = {Facebook (Meta) Engineering Blog},
   year         = {2018},
+  month        = dec,
   url          = {https://engineering.fb.com/2018/12/19/core-data/zstandard/},
   urldate      = {2026-08-27}
 }
 
+% Verified: arXiv:2510.03203 (v1 2025-10-03, v2 2025-10-30).
+% NOTE: there are TWO overlapping arXiv submissions from this group:
+% arXiv:2510.03203 "OpenZL: A Graph-Based Model for Compression"
+% (October 2025, the announcement paper, the one the community cites)
+% and arXiv:2605.09928 "OpenZL: Using Graphs to Compress Smaller and
+% Faster" (2026-05-11, carrying an arXiv admin note of "substantial
+% text overlap with arXiv:2510.03203"). Same 13 authors on both.
+% The October 2025 record is cited here as the canonical/original one.
+% UNVERIFIED: neither submission carries a journal-ref or publisher DOI,
+% so there is no peer-reviewed version of record to cite, and arXiv has
+% not marked either as superseding the other; if a venue acceptance for
+% the 2026 version appears before submission, switch to it.
 @misc{openzl,
-  author       = {{OpenZL contributors}},
-  title        = {{OpenZL}: TODO verify full title from arXiv abstract},
-  howpublished = {arXiv preprint},
-  year         = {2025},
-  eprint       = {TODO},
+  author        = {Collet, Yann and Terrell, Nick and Handte, W. Felix
+                   and Rozenblit, Danielle and Zhang, Victor and Zhang, Kevin
+                   and Goldschlag, Yaelle and Lee, Jennifer and Gorokhovsky, Elliot
+                   and Komornik, Yonatan and Riegel, Daniel and Angelov, Stan
+                   and Rotem, Nadav},
+  title         = {{OpenZL}: A Graph-Based Model for Compression},
+  howpublished  = {arXiv preprint arXiv:2510.03203},
+  year          = {2025},
+  month         = oct,
+  eprint        = {2510.03203},
   archivePrefix = {arXiv},
-  url          = {https://arxiv.org/abs/TODO},
-  urldate      = {2026-08-27},
-  note         = {TODO verify: arXiv ID, exact title, and author list before submission}
+  primaryClass  = {cs.IT},
+  doi           = {10.48550/arXiv.2510.03203},
+  url           = {https://arxiv.org/abs/2510.03203},
+  urldate       = {2026-08-27},
+  note          = {Extended companion version: arXiv:2605.09928,
+                   ``{OpenZL}: Using Graphs to Compress Smaller and Faster''}
 }
 
+% Verified: RFC Editor (rfc-editor.org/rfc/rfc9842.txt), September 2025,
+% Standards Track.
+% NOTE: the previous entry credited "Vlad Vasiliev", which is wrong.
+% The authors are Patrick Meenan (Google) and Yoav Weiss (Shopify).
+% RFC 9842 is Compression Dictionary TRANSPORT (the HTTP mechanism);
+% RFC 9841 is the Shared Brotli FORMAT. Do not swap them.
 @misc{rfc9842,
-  author       = {Vasiliev, Vlad},
+  author       = {Meenan, Patrick and Weiss, Yoav},
   title        = {Compression Dictionary Transport},
-  howpublished = {RFC 9842},
+  howpublished = {RFC 9842, Standards Track},
   publisher    = {RFC Editor},
   year         = {2025},
+  month        = sep,
   doi          = {10.17487/RFC9842},
   url          = {https://www.rfc-editor.org/rfc/rfc9842},
   urldate      = {2026-08-27}
+}
+
+% Verified: DBLP journals/tit/Niesen19 + IEEE Xplore document 8712406.
+% Added in this pass: \S7 referred to "Niesen dedup theory" with no
+% corresponding entry. Earlier versions exist (ISIT 2017,
+% doi:10.1109/ISIT.2017.8006827, pp. 1738--1742; and arXiv:1701.04451);
+% the IEEE Trans. IT journal version is the definitive one.
+@article{niesen2019dedup,
+  author  = {Niesen, Urs},
+  title   = {An Information-Theoretic Analysis of Deduplication},
+  journal = {IEEE Transactions on Information Theory},
+  volume  = {65},
+  number  = {9},
+  pages   = {5688--5704},
+  year    = {2019},
+  publisher = {IEEE},
+  doi     = {10.1109/TIT.2019.2916037}
 }
