@@ -31,3 +31,11 @@ C,apijson,3,default_matched,952604,3.705091,0.262,zstd --train -r train --maxdic
 C,apijson,19,default_matched,952604,4.749378,0.222,zstd --train -r train --maxdict=1048583 -T8 (S=MAIN/full dict_size for this corpus/level); reference: MAIN/full ratio=5.355901 at same nominal size S=1048583 (see results/benchmark_v2.csv; not rerun here)
 D,apijson,3,rocksdb_finalize,113831,3.794894,0.188,"ZDICT_finalizeDictionary(content=~113664B raw concat of random train files, seed=1729, samples=full train dir, compressionLevel=3); RocksDB use_zstd_dict_trainer=false path"
 D,apijson,19,rocksdb_finalize,113831,4.409882,1.474,"ZDICT_finalizeDictionary(content=~113664B raw concat of random train files, seed=1729, samples=full train dir, compressionLevel=19); RocksDB use_zstd_dict_trainer=false path"
+A,csvrows,3,default64,65536,6.057370,3.408,zstd --train -r train --maxdict=65536 -T8; Cassandra real default (64KiB@L3)
+A,csvrows,3,ours64,65536,6.057370,303.766,trainer.py --target-level 3 --max-budget 65536 --time-budget-s 300
+B,csvrows,1,default110_L1,112640,5.772527,0.000,"reused MAIN 'default' dict from runs/campaign_v2/csvrows/3/default.dict (zstd --train has no level dependency, so the L3-dir artifact is identical to what an L1 build would produce); evaluated at L1"
+B,csvrows,1,ours_L1,262144,6.240241,604.056,trainer.py --target-level 1 --max-budget 2097152 --time-budget-s 600
+C,csvrows,3,default_matched,1048576,6.605505,1.661,zstd --train -r train --maxdict=1048576 -T8 (S=MAIN/full dict_size for this corpus/level); reference: MAIN/full ratio=6.605505 at same nominal size S=1048576 (see results/benchmark_v2.csv; not rerun here)
+C,csvrows,19,default_matched,2097143,10.189167,1.638,zstd --train -r train --maxdict=2097143 -T8 (S=MAIN/full dict_size for this corpus/level); reference: MAIN/full ratio=10.471400 at same nominal size S=2097143 (see results/benchmark_v2.csv; not rerun here)
+D,csvrows,3,rocksdb_finalize,113810,5.394449,0.753,"ZDICT_finalizeDictionary(content=~113664B raw concat of random train files, seed=1729, samples=full train dir, compressionLevel=3); RocksDB use_zstd_dict_trainer=false path"
+D,csvrows,19,rocksdb_finalize,113813,6.843335,47.420,"ZDICT_finalizeDictionary(content=~113664B raw concat of random train files, seed=1729, samples=full train dir, compressionLevel=19); RocksDB use_zstd_dict_trainer=false path"
