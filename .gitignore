@@ -10,3 +10,13 @@ tools/offset_hist
 *.o
 runs/
 paper/figures/
+paper/latex/tables/
+paper/latex/*.pdf
+paper/latex/*.aux
+paper/latex/*.bbl
+paper/latex/*.blg
+paper/latex/*.out
+paper/latex/*.toc
+paper/latex/*.fls
+paper/latex/*.fdb_latexmk
+paper/latex/*.synctex.gz
