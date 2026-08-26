@@ -32,12 +32,21 @@ sweeping `--maxdict` to tune their deployment will silently select a worse
 dictionary the moment they cross the threshold, and nothing in the tool's
 output tells them so.
 
-This is the same class of failure reported in zstd issue #4127, where a user
-observed a 90x-to-14x collapse on production JSON payloads after raising
-`--maxdict` from 512 KB to 550 KB. We do not reproduce that magnitude — their
-data is private and their payloads (~435 KB) are far outside the small-record
-regime dictionaries target — but the signature is identical, and the mechanism
-we identify below accounts for it.
+The symptom is not new; what is new is the explanation. In August 2024 an
+engineer integrating zstd dictionaries at Roblox opened a thread on the zstd
+tracker describing their tuning process, and recorded among their
+observations that "the max dict size is really sensitive, and doesn't just act
+as an upper bound: with 2048 & 4096 chunks with 1 copy each, a max dict size
+of 512KB gets 90x ratio but 550KB gets 14x ratio" [#4127]. The thread was
+answered and closed as completed in December 2024; the trainer's behaviour is
+unchanged in the current release, and no explanation of the collapse was
+recorded.
+
+We do not reproduce that magnitude — their data is private and their payloads
+(~435 KB) sit well outside the small-record regime dictionaries target — but
+the signature is the one measured above, on public data, and the mechanism in
+§3.2 accounts for it. We are careful to claim only this: the same failure mode
+is reachable on zstd's own benchmark corpus, and it has a specific cause.
 
 ## 3.2 Mechanism
 

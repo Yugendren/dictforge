@@ -72,9 +72,11 @@ first mechanistic diagnosis of its behavior on real corpora, identifying
 three defects: (1) \emph{budget degeneracy} -- past internal caps,
 requesting a larger dictionary silently yields a smaller one, collapsing
 compression ratio by up to 28\% in step-function drops on zstd's own
-benchmark corpus (consistent with, though smaller than, the
-size-sensitivity practitioners have reported
-upstream~\cite{zstdissue4127}); (2) \emph{size blindness}
+benchmark corpus -- the same symptom a production user reported upstream
+(a 512\,KB budget yielding a $90\times$ ratio and a 550\,KB budget
+yielding $14\times$ on their data), in a thread that was answered and
+closed without the underlying behavior
+changing~\cite{zstdissue4127}; (2) \emph{size blindness}
 -- the trainer never searches dictionary size, though the optimal size
 varies by two orders of magnitude across corpora and the default budget
 leaves 2--22\% compression on the table; (3) \emph{level blindness} --
@@ -109,8 +111,9 @@ Our contributions are:
 \begin{enumerate}
   \item The first mechanistic quantitative diagnosis of the incumbent
     trainer, comprising the budget-degeneracy root cause, size
-    blindness, and level blindness, including the likely root cause of
-    issue \#4127~\cite{zstdissue4127}.
+    blindness, and level blindness; the first of these accounts for a
+    budget-sensitivity collapse reported upstream but never
+    explained~\cite{zstdissue4127}.
   \item A level-aware, validation-driven trainer with an anytime-safety
     guarantee, with each component individually ablated.
   \item A 5-corpus, 2-level, 7-variant benchmark, including a Brotli
