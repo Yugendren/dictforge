@@ -29,3 +29,13 @@ MAIN,weblogs,19,default,112640,8.683779,1.359,zstd --train --maxdict=112640 -T8
 MAIN,weblogs,19,tuned,1572864,10.844671,490.451,trainer.py --stages 1 --time-budget-s 1800
 MAIN,weblogs,19,full,1572871,11.509447,1994.908,trainer.py --stages all --time-budget-s 1800
 MAIN,weblogs,19,rawconcat,112640,7.206095,0.072,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+MAIN,apijson,3,nodict,0,1.914644,0.000,
+MAIN,apijson,3,default,112640,4.001424,1.024,zstd --train --maxdict=112640 -T8
+MAIN,apijson,3,tuned,1048576,4.246075,197.551,trainer.py --stages 1 --time-budget-s 600
+MAIN,apijson,3,full,1048576,4.246075,198.310,trainer.py --stages all --time-budget-s 600
+MAIN,apijson,3,rawconcat,112640,3.494193,0.022,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+MAIN,apijson,19,nodict,0,1.957815,0.000,
+MAIN,apijson,19,default,112640,4.592770,0.232,zstd --train --maxdict=112640 -T8
+MAIN,apijson,19,tuned,1835008,5.414464,224.611,trainer.py --stages 1 --time-budget-s 1800
+MAIN,apijson,19,full,1835008,5.499972,2968.693,trainer.py --stages all --time-budget-s 1800
+MAIN,apijson,19,rawconcat,112640,4.089016,0.068,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
