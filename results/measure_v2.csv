@@ -11,3 +11,15 @@ T1,github_users,19,default,decompress_throughput_MBps,2.957110,MB/s,"median of 3
 T1,github_users,19,full,dict_size,1048575,bytes,
 T1,github_users,19,full,compress_throughput_MBps,1.727128,MB/s,"median of 3 reps=['0.835', '0.864', '0.937']s; raw_bytes=1491789; decimal MB=1e6 bytes; nice -n10, serial, single-threaded"
 T1,github_users,19,full,decompress_throughput_MBps,3.579299,MB/s,"median of 3 reps=['0.417', '0.408', '0.705']s; raw_bytes=1491789; decimal MB=1e6 bytes; integrity_check=OK"
+T1,gharchive,3,default,dict_size,112640,bytes,
+T1,gharchive,3,default,compress_throughput_MBps,7.799228,MB/s,"median of 3 reps=['2.103', '1.543', '1.278']s; raw_bytes=12030859; decimal MB=1e6 bytes; nice -n10, serial, single-threaded"
+T1,gharchive,3,default,decompress_throughput_MBps,15.650001,MB/s,"median of 3 reps=['0.767', '0.769', '1.190']s; raw_bytes=12030859; decimal MB=1e6 bytes; integrity_check=OK"
+T1,gharchive,3,full,dict_size,1048576,bytes,
+T1,gharchive,3,full,compress_throughput_MBps,18.369735,MB/s,"median of 3 reps=['0.756', '0.630', '0.655']s; raw_bytes=12030859; decimal MB=1e6 bytes; nice -n10, serial, single-threaded"
+T1,gharchive,3,full,decompress_throughput_MBps,19.789165,MB/s,"median of 3 reps=['0.544', '0.608', '1.068']s; raw_bytes=12030859; decimal MB=1e6 bytes; integrity_check=OK"
+T1,gharchive,19,default,dict_size,112640,bytes,
+T1,gharchive,19,default,compress_throughput_MBps,3.914752,MB/s,"median of 3 reps=['4.425', '2.467', '3.073']s; raw_bytes=12030859; decimal MB=1e6 bytes; nice -n10, serial, single-threaded"
+T1,gharchive,19,default,decompress_throughput_MBps,23.837561,MB/s,"median of 3 reps=['0.598', '0.490', '0.505']s; raw_bytes=12030859; decimal MB=1e6 bytes; integrity_check=OK"
+T1,gharchive,19,full,dict_size,2097152,bytes,
+T1,gharchive,19,full,compress_throughput_MBps,2.665790,MB/s,"median of 3 reps=['5.031', '4.513', '4.236']s; raw_bytes=12030859; decimal MB=1e6 bytes; nice -n10, serial, single-threaded"
+T1,gharchive,19,full,decompress_throughput_MBps,28.719173,MB/s,"median of 3 reps=['0.419', '0.425', '0.417']s; raw_bytes=12030859; decimal MB=1e6 bytes; integrity_check=OK"
