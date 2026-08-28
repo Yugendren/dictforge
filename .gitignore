@@ -1,4 +1,5 @@
 third_party/
+.venv/
 corpora/*
 !corpora/fetch_corpora.py
 *.pyc
