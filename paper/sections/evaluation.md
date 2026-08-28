@@ -16,9 +16,11 @@ requests). Each is split 80/20 into training and held-out sets by seeded
 shuffle. Training touches only the training set; the held-out set is
 compressed exactly once per configuration reported.
 
-We evaluate at compression level 3 — the default for RocksDB, ScyllaDB
-SSTables and Cassandra — and level 19, representing write-once archival use;
-level 1 appears in the ScyllaDB RPC parity experiment. All measurements were
+We evaluate at compression level 3 — the default for RocksDB (opt-in),
+ScyllaDB SSTables, and Cassandra's own code default — and level 19,
+representing write-once archival use; level 1 appears in a parity cell
+motivated by ScyllaDB's RPC compression path, which is off by default
+(§2.3) — that cell should not be read as a production claim. All measurements were
 made on an Apple M4 (10 cores) against zstd built from `82d322c` (v1.6.0),
 with round-trip correctness of every dictionary verified against an
 independently installed stock zstd binary.
@@ -106,20 +108,31 @@ This is the clearest available demonstration of why the safety property in
 §5.5 matters: the naive version of this experiment silently selects the
 broken dictionary.
 
-## 6.4 Production configurations
+## 6.4 Production configurations and deployment-motivated settings
 
-Deployments do not use our sizes or our levels, so we reproduced their
-configurations directly (Table~\ref{tab:parity}).
+Deployments do not use our sizes or our levels, so we reproduced one shipped
+default directly and two further settings motivated by (but not identical
+to) real deployments (Table~\ref{tab:parity}; see §2.3 for the verified
+deployment status behind each label).
 
-*Cassandra* trains 64 KiB dictionaries at level 3. Constrained to that budget,
-our trainer beats the stock trainer on three corpora (+0.4% to +1.7%) and
-ties exactly on two — no losses. On `github_users` it wins while selecting a
+*Cassandra* trains 64 KiB dictionaries at level 3 — this is the code's own
+shipped default (`CompressionDictionaryTrainingConfig`), even though CEP-54
+as a whole is not yet merged or released. Constrained to that budget, our
+trainer beats the stock trainer on three corpora (+0.4% to +1.7%) and ties
+exactly on two — no losses. On `github_users` it wins while selecting a
 16 KiB dictionary, a quarter of the permitted budget.
 
-*ScyllaDB* compresses RPC traffic at level 1 with 110 KiB dictionaries. There
-we win on all five corpora, +1.6% to +8.1%.
+*A level-1, 110 KiB setting motivated by ScyllaDB's RPC path* — that path
+(`rpc_dict_training_when`) is off by default, so this cell should be read as
+an evaluation datapoint at a level ScyllaDB's RPC path would use if enabled,
+not a production-usage claim. There we win on all five corpora, +1.6% to
++8.1%. (ScyllaDB's SSTable-dictionary path, by contrast, is production and,
+as of release 2025.4, the *default* SSTable compressor — but its 110 KiB,
+level-3 configuration is already covered by the "deployed default" cells in
+Table~\ref{tab:main}, so it does not need a separate parity row here.)
 
-*RocksDB* offers a no-trainer path that hands raw sampled blocks to
+*RocksDB* offers an opt-in no-trainer path (dictionaries are off by default;
+`max_dict_bytes=0`) that hands raw sampled blocks to
 `ZDICT_finalizeDictionary`. It ranks between no dictionary and the stock
 trainer in nine of ten cells (median −6.9% against the trainer) and trails our
 pipeline by a median of 18%.

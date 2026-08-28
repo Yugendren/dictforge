@@ -248,46 +248,92 @@ which specific downstream systems call which, and with what parameters, is
 not something this repository can verify without the upstream source
 checked out, and each such claim below is marked accordingly.
 
-RocksDB is reported to default dictionary compression off, to use
-compression level 3 when it is enabled, and to fall back to
-`ZDICT_finalizeDictionary` over raw (untrained) samples when the trained-dictionary
-path is unavailable or disabled `[CITE: RocksDB source — table/block_based_table_builder.cc
-or table/block_based/block_based_table_builder.cc, plus the relevant
-CompressionOptions default struct, for the off-by-default and level-3 claims;
-and whatever code path invokes ZDICT_finalizeDictionary directly as a fallback]`.
-ScyllaDB is reported to train 110 KB dictionaries and to compress its RPC
-traffic at level 1 while compressing SSTables at level 3
-`[CITE: ScyllaDB source — the dictionary-training call site and the two
-distinct compression-level configuration points for RPC vs. SSTable
-compression]`. Apache Cassandra's CEP-54 (merged to trunk at time of
-writing) is reported to use 64 KiB dictionaries trained at whatever
-compression level a table is configured to use, and to support importing an
-externally built dictionary via `nodetool`
-`[CITE: Cassandra CEP-54 — the JIRA/CEP document and the trunk source path
-implementing dictionary training and the specific nodetool subcommand for
-external dictionary import]`. None of the three system-specific numbers in
-this paragraph (RocksDB's default level and on/off state, ScyllaDB's 110 KB
-and per-purpose levels, Cassandra's 64 KiB and nodetool command name) has
-been checked against upstream source in this pass; they are stated here as
-the claims the paper intends to make, for the integration pass to verify or
-correct.
+**Verified against live upstream source, 2026-08-28** (this replaces the
+earlier `[CITE: ...]` placeholders below with checked facts; see
+`references.bib` and the corresponding footnotes in `main.tex` §2.2 for the
+exact commit pins).
+
+RocksDB's dictionary path is opt-in and *off by default*:
+`CompressionOptions::max_dict_bytes` defaults to `0`
+(`include/rocksdb/compression_type.h:238`, confirmed on tag `v11.8.1` and on
+`main`). Once a caller enables it, `use_zstd_dict_trainer` defaults to
+`true` (`compression_type.h:302`), meaning our trainer path — not
+`ZDICT_finalizeDictionary` — is RocksDB's own default once dictionaries are
+turned on, at 110 KB and level 3. So Experiment D (RocksDB's no-trainer
+fallback, §6.4) is deliberately exercising an *opt-in, non-default*
+configuration, not evidence that RocksDB moved away from the trainer.
+
+ScyllaDB trains both RPC-compression and SSTable dictionaries through the
+same 110 KiB, direct `ZDICT_trainFromBuffer` call
+(`message/dict_trainer.hh:76`: `max_dict_size = 110*1024`;
+`message/dict_trainer.cc:87`; reused for SSTable dictionaries via
+`sstable_dict_autotrainer.cc` → `storage_service::train_dict`
+(`service/storage_service.cc:3387`) → `main.cc:2073`
+(`netw::zdict_train(sample, {})`), traced directly in `scylladb/scylladb`
+master@`233d822abf17cfc2f0813c48169b4f1f3d4d15c9`). The two paths are *not*
+equally deployed, however: RPC-dictionary training defaults to off
+(`rpc_dict_training_when = NEVER`, `db/config.cc:1201`; and
+`internode_compression_enable_advanced` defaults to `false`,
+`db/config.cc:1199`) — so our level-1/110 KiB evaluation cell is honestly a
+setting *motivated by* ScyllaDB's RPC path, not a claim that anyone runs it
+in production. SSTable dictionary compression is the case we previously
+understated: it has been available, opt-in, since release 2025.2, and per
+commit `adf9c426c2e053126b21fa08a1ecf23c4d96c7b1` (2025-10-31,
+"`db/config`: Change Default SSTable Compressor to
+`LZ4WithDictsCompressor`") it became ScyllaDB's *default* SSTable
+compressor starting with release 2025.4 — confirmed by diffing
+`db/config.cc` across `branch-2025.2` (still `LZ4Compressor` default),
+`branch-2025.4`, and `branch-2026.1` (both default to
+`LZ4WithDictsCompressor`). This means the 110 KiB/level-3 configuration we
+already report as "the deployed default" in the main results table is,
+specifically for ScyllaDB, production-representative, not merely a
+convenient evaluation choice.
+
+Apache Cassandra's CEP-54 is **not** merged to a released version, despite
+what an earlier draft of this section claimed. The tracking epic,
+[CASSANDRA-20902](https://issues.apache.org/jira/browse/CASSANDRA-20902),
+has JIRA status "In Progress" with fix version `7.x` (verified via the
+Apache JIRA REST API, 2026-08-28). Its implementation exists only on the
+`cassandra-6.0` branch, which itself has shipped only as far as a
+`6.0-alpha2` preview (`dlcdn.apache.org/cassandra/` lists 3.0.32, 3.11.19,
+4.0.21, 4.1.12, 5.0.9, and 6.0-alpha2 — the latest general release is
+5.0.x, no 6.0 GA exists). A related ticket,
+[CASSANDRA-21154](https://issues.apache.org/jira/browse/CASSANDRA-21154)
+("Remove traces of auto-training for Zstd dictionaries as it is not
+implemented fully for now"), is Resolved/Fixed and its description
+explicitly calls the removed auto-training code "dead code." We keep the
+64 KiB budget as an evaluation target because it is the code's own
+default — `CompressionDictionaryTrainingConfig`'s builder sets
+`maxDictionarySize = 65536` (line 65 of
+`src/java/org/apache/cassandra/db/compression/CompressionDictionaryTrainingConfig.java`,
+confirmed present on `cassandra-6.0`@`a0b991d2067968c4965b55b1b7b687cf08591ece`
+and on `trunk`, and confirmed *absent* on the `cassandra-5.0` branch,
+consistent with CEP-54 being unreleased). CEP-54's own design document
+(the Confluence CEP page) recommends a dictionary size "around 100KiB,"
+closer to the 110 KiB figure used elsewhere in this paper than to the
+code's 64 KiB implementation default — worth flagging as a discrepancy
+between the design doc and the current implementation.
+
+We use these three budgets/levels as evaluation targets in the parity
+section regardless, but each should be labeled honestly by what it is: a
+shipped, now-default configuration (ScyllaDB SSTable, Cassandra's 64 KiB),
+an evaluation setting *motivated by* an off-by-default production path
+(ScyllaDB RPC), or a setting drawn from unreleased code (Cassandra's full
+CEP-54) — not uniformly "production."
 
 ---
 **TODO before submission**
-- [ ] Resolve every `[CITE: ...]` marker above against the actual RocksDB,
-      ScyllaDB, and Cassandra source (checkout, exact file:line, and commit
-      pin), matching the precision used for the zstd-side citations in this
-      section.
-- [ ] Confirm RocksDB's dictionary-compression default (on/off) and default
-      level against its current `CompressionOptions` struct — do not assume
-      the "level 3" here is the same "level 3" as `ZSTD_CLEVEL_DEFAULT`
-      (`lib/zstd.h:134`); they are independent defaults that happen to
-      coincide and must not be conflated in the integration pass.
-- [ ] Confirm RocksDB's no-trainer fallback literally calls
-      `ZDICT_finalizeDictionary` (as opposed to a wrapper or an older
-      `ZDICT_trainFromBuffer_legacy` variant) at the call site.
-- [ ] Confirm CEP-54's merge-to-trunk status is still current as of the
-      paper's submission date, since "merged to trunk" is a moving target.
+- [x] Resolved every `[CITE: ...]` marker above against live RocksDB,
+      ScyllaDB, and Cassandra source, with exact file:line and commit pins
+      (2026-08-28); see `references.bib`.
+- [x] Confirmed RocksDB's dictionary-compression default (off) and its
+      trainer-vs-finalize default (trainer, once enabled) against
+      `include/rocksdb/compression_type.h` directly — this is a different
+      "level 3" default from `ZSTD_CLEVEL_DEFAULT` (`lib/zstd.h:134`) and
+      the two should not be conflated; noted above.
+- [x] Confirmed CEP-54's status is *not* current-release: JIRA epic
+      CASSANDRA-20902 is "In Progress" (fix version 7.x), and the
+      implementation lives only on the unreleased `cassandra-6.0` branch.
 - [ ] Decide whether §2.1's attach-vs-copy and dtlm-fast/full material is
       needed in this much detail here, or whether it should be trimmed once
       it's clear how much §5 (content refinement) and §6.4 (LZ4 transfer)

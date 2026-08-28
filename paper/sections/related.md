@@ -12,6 +12,10 @@ evaluated it on multi-gigabyte web collections. zstd adopted the method,
 named it `--train-cover`, and later added a faster approximation
 (`fastCOVER`, the current CLI default) that replaces exact per-sample d-mer
 counting with a lossy hash table. Both are unchanged in substance since 2018.
+fastCOVER itself has no academic description at all: it entered zstd via
+GitHub pull requests #1250 ("Add Fast Cover Dictionary Builder," merged
+2018-07-27) and #1274 ("Merge fastCover into DictBuilder," merged
+2018-08-23), both by the same author (jennifermliu) — not via a paper.
 We reuse the covering heuristic itself without modification; our contribution
 lies entirely in the selection layer around it.
 
@@ -19,10 +23,31 @@ A note on that paper's reception is relevant to our own dissemination
 strategy: it has been cited on the order of a dozen times while its code, in
 vendored form, appears in hundreds of public repositories. The technique was
 absorbed into zstd under a name the paper never used, and credit followed the
-feature flag rather than the citation. We take the lesson that a compression
-contribution reaches practitioners through a named, maintained artifact, and
-reaches the literature only if the paper, the name and the artifact are the
-same object.
+feature flag rather than the citation.
+
+**Level-blindness is not a new observation — verified 2026-08-28, and this
+matters for our novelty claim.** A zstd maintainer (Nick Terrell,
+`terrelln`) wrote in a 2019 GitHub issue thread
+(facebook/zstd#1572, "Dictionary training performance anomaly, any
+answers?", opened by GitHub user `xinglin`/Xing Lin): "If you use the same
+level you use for compression, it will tune the dictionary better for your
+use case." (We could not confirm the audit's specific claim of a reporter
+measuring "~1.1%" anywhere in that thread; the reporter's own before/after
+numbers there were a ratio change from 5.18× to 6.21× on a Linux-kernel
+tarball corpus when training was done at the deployment's actual level
+instead of the hard-coded default — a real number, just not the one the
+audit cited, so we should not repeat "~1.1%" in the paper.) Separately, a
+2022 issue (facebook/zstd#3213, opened by GitHub user `efbicief`) asking
+for a `compressionLevel` parameter on the stable `ZDICT_trainFromBuffer`
+entry point was declined same-day by Terrell specifically to preserve ABI
+stability. **Consequence for the paper:** we must not claim novelty for the
+*observation* that compression level matters for dictionary quality — that
+was stated publicly by a zstd maintainer in 2019. Our actual claim should
+be narrower: the *mechanism* (three independent, opposite-sign inversions
+traced to hash-table overwrite vs. full binary-tree indexing, §3.5) and the
+*magnitude* (including, to our knowledge, the first published measurement
+of the disabled repcode-seeding path) — not the base observation that level
+matters.
 
 **Existing alternative trainers.** Two exist in practice. The Go
 implementation in `klauspost/compress` emits standard-format zstd
@@ -91,14 +116,29 @@ construction for a specific encoder.
 
 ## Deployment context
 
-Trained dictionaries are used in production by RocksDB, ScyllaDB and, as of
-CEP-54, Cassandra; the web ecosystem has recently standardised dictionary
-transport, and the browser-side path uses raw-content dictionaries with
-Brotli as well as zstd. This matters for our evaluation design: it dictates
-the configurations we must match (64 KiB dictionaries at level 3; RPC traffic
-at level 1; a no-trainer fallback path), and it is the reason §6 reports
-equal-size comparisons at those settings rather than only at our own chosen
-sizes.
+**Corrected 2026-08-28 against live upstream source (see §2.3 for full
+citations/commits) — the original version of this paragraph overclaimed
+uniformly "used in production."** Deployment status actually varies by
+system and by path: ScyllaDB's SSTable-dictionary path, and RocksDB on an
+opt-in basis, use trained dictionaries in production. Cassandra's CEP-54
+targets the same but is *not* merged or shipped (tracking epic
+CASSANDRA-20902 is still "In Progress," fix version 7.x; the code lives
+only on the unreleased `cassandra-6.0` branch). ScyllaDB's own
+RPC-dictionary path, separately, is off by default
+(`rpc_dict_training_when = NEVER`). The web has standardized dictionary
+transport (RFC 9842) and Chrome ships it, but this is not the "emerging
+ecosystem" scale the phrase might suggest: Chrome's own use-counters
+(`chromestatus.com`, feature 5124977788977152, checked 2026-08-28) put
+overall `SharedDictionaryUsed` at roughly 0.09% of page loads, and
+`SharedDictionaryUsedWithSharedZstd` — the zstd-specific path most
+relevant to us — at roughly 0.0002%, two further orders of magnitude
+smaller. Cloudflare's implementation is a "Beta"-labeled passthrough mode
+that itself generates no dictionaries (origin-side work is required per
+Cloudflare's own developer docs). This variation — not a uniform
+"production use" claim — is why §6 matches these specific configurations
+(64 KiB at level 3 for Cassandra's shipped default; a level-1/110 KiB
+setting *motivated by* ScyllaDB's RPC path; a no-trainer fallback for
+RocksDB's opt-in path) rather than only our own chosen sizes.
 
 ---
 **TODO for integration**

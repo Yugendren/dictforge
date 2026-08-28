@@ -365,6 +365,83 @@
 % corresponding entry. Earlier versions exist (ISIT 2017,
 % doi:10.1109/ISIT.2017.8006827, pp. 1738--1742; and arXiv:1701.04451);
 % the IEEE Trans. IT journal version is the definitive one.
+% Verified: GitHub REST API for facebook/zstd issue 1572, plus its full
+% comment thread. Opened by GitHub user "xinglin" (real name Xing Lin,
+% per the GitHub API), 2019-04-04, closed. The quoted sentence is from
+% zstd maintainer Nick Terrell (GitHub "terrelln"), 2019-04-05: "If you
+% use the same level you use for compression, it will tune the
+% dictionary better for your use case." The reporter's own before/after
+% numbers in that thread (default level 3 vs. the deployment's actual
+% level) were a compression-ratio change from 5.18x to 6.21x on a Linux
+% kernel tarball corpus -- cited qualitatively here, not by that specific
+% percentage, since no independent "~1.1%" figure appears anywhere in
+% this thread.
+@misc{zstdissue1572,
+  author       = {Lin, Xing},
+  title        = {Dictionary Training Performance Anomaly, any Answers?},
+  howpublished = {GitHub issue \#1572, \texttt{facebook/zstd}},
+  year         = {2019},
+  month        = apr,
+  url          = {https://github.com/facebook/zstd/issues/1572},
+  urldate      = {2026-08-28}
+}
+
+% Verified: GitHub REST API for facebook/zstd issue 3213. Opened by
+% GitHub user "efbicief" (display name "Felix B."), 2022-07-25, closed
+% 2022-12-16. Maintainer Nick Terrell declines the feature same-day,
+% citing ABI stability of ZDICT_trainFromBuffer.
+@misc{zstdissue3213,
+  author       = {B., Felix},
+  title        = {Add \texttt{compressionLevel} Parameter to \texttt{ZDict\_trainFromBuffer}},
+  howpublished = {GitHub issue \#3213, \texttt{facebook/zstd}},
+  year         = {2022},
+  month        = jul,
+  url          = {https://github.com/facebook/zstd/issues/3213},
+  urldate      = {2026-08-28}
+}
+
+% NOTE (2026-08-28): RocksDB (include/rocksdb/compression_type.h,
+% v11.8.1: max_dict_bytes=0 off by default, use_zstd_dict_trainer=true),
+% ScyllaDB (scylladb/scylladb db/config.cc, message/dict_trainer.hh:76,
+% commit adf9c426c2e053126b21fa08a1ecf23c4d96c7b1 for the 2025.4
+% default-compressor change), and Cassandra (JIRA CASSANDRA-20902/-21154,
+% db/compression/CompressionDictionaryTrainingConfig.java on branch
+% cassandra-6.0, and the CEP-54 Confluence design document) are cited
+% in \S2.2 via inline URL footnotes rather than \cite, to keep the
+% reference list within the page budget; verification detail for each is
+% in the corresponding footnote/commit message, checked live 2026-08-28.
+
+% Verified via the live chromestatus.com API, 2026-08-28:
+% api/v0/features?q=SharedDictionary (feature id 5124977788977152) and
+% data/timeline/featurepopularity?bucket_id={4601,4628}, cross-checked
+% against WebFeature enum values in
+% chromium/chromium tools/metrics/histograms/metadata/blink/enums.xml
+% (SharedDictionaryUsed=4601, SharedDictionaryUsedWithSharedZstd=4628).
+% Most recent daily values at verification time: SharedDictionaryUsed
+% ~0.090% of page loads (2026-08-25); SharedDictionaryUsedWithSharedZstd
+% ~0.00017% of page loads (2026-08-26).
+@misc{chromestatususecounters,
+  author       = {{Google Chrome team}},
+  title        = {{Chrome Platform Status}: Compression Dictionary Transport},
+  howpublished = {\texttt{chromestatus.com}, feature 5124977788977152},
+  year         = {2026},
+  url          = {https://chromestatus.com/feature/5124977788977152},
+  urldate      = {2026-08-28}
+}
+
+% Verified by fetching the live developers.cloudflare.com page,
+% 2026-08-28 (page metadata reports dateModified 2026-08-14). Page
+% states the feature is "Beta" and that "In passthrough mode, Cloudflare
+% does not generate dictionaries or compute deltas."
+@misc{cloudflaresharedddict,
+  author       = {{Cloudflare, Inc.}},
+  title        = {Shared Dictionaries},
+  howpublished = {Cloudflare Developer Docs},
+  year         = {2026},
+  url          = {https://developers.cloudflare.com/speed/optimization/content/shared-dictionaries/},
+  urldate      = {2026-08-28}
+}
+
 @article{niesen2019dedup,
   author  = {Niesen, Urs},
   title   = {An Information-Theoretic Analysis of Deduplication},

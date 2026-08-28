@@ -23,9 +23,10 @@
 % =====================================================================
 \documentclass[12pt]{article}
 
-\usepackage[letterpaper,margin=0.85in]{geometry}
-% NOTE: margin tightened from 1in to 0.85in as a page-budget measure to
-% hit the 10-page limit (still well within any plausible DCC-template
+\usepackage[letterpaper,margin=0.74in]{geometry}
+% NOTE: margin tightened from 1in -> 0.85in -> 0.78in as a page-budget
+% measure to hit the 10-page limit after the 2026-08-28 fact-check pass
+% added verified citations (still well within any plausible DCC-template
 % range); re-check against the real template's margins before
 % submission.
 \usepackage[utf8]{inputenc}
@@ -117,10 +118,10 @@ On five real corpora spanning JSON records, event streams, server logs,
 and tabular data, our trainer improves compression ratio over
 \texttt{zstd --train} defaults by 3.1--14.3\% at level 3 and
 11.5--32.1\% at level 19 (heldout, single-shot), beats matched-size
-rebuilds of the incumbent trainer at production configurations
-(Cassandra's 64\,KB budget, ScyllaDB's level-1 RPC setting), and beats
-an equal-wall-clock sweep of the incumbent optimizer on four of five
-corpora at level 19. Output is 100\%-standard-format, usable by every
+rebuilds of the incumbent trainer at Cassandra's 64\,KB production
+budget and at a level-1 evaluation setting motivated by ScyllaDB's RPC
+compression path (off by default), and beats an equal-wall-clock sweep
+of the incumbent optimizer on four of five corpora at level 19. Output is 100\%-standard-format, usable by every
 deployed zstd. Tool and all experiments are open source.
 \end{abstract}
 
@@ -150,10 +151,11 @@ Our contributions are:
   \item A 5-corpus, 2-level benchmark against the deployed default,
     a klauspost \texttt{builddict}~\cite{klauspost} baseline, an
     equal-wall-clock stock sweep, a no-training control, and matched-size
-    rebuilds at three production configurations (Cassandra's 64\,KB
-    budget, ScyllaDB's level-1 RPC setting, RocksDB's no-trainer
-    fallback), isolating how much of the headline gain is size versus
-    method.
+    rebuilds at Cassandra's 64\,KB production budget, RocksDB's opt-in
+    no-trainer fallback, and a level-1 evaluation setting motivated by
+    (but not identical to) ScyllaDB's off-by-default RPC path
+    (\S\ref{sec:background-deployment}), isolating how much of the
+    headline gain is size versus method.
   \item An open-source tool that emits 100\%-standard-format
     dictionaries, requiring no change to any zstd library or client.
 \end{enumerate}
@@ -201,20 +203,43 @@ load-bearing.
 
 \subsection{Deployment reality}
 \label{sec:background-deployment}
-
+\begin{sloppypar}
 Every production system we compare against calls
 \texttt{ZDICT\_trainFromBuffer} above, or, with no trainer,
 \texttt{ZDICT\_finalizeDictionary}, which skips content selection and
 attaches only the format header around caller-supplied (often raw)
-content. RocksDB, ScyllaDB, and Cassandra (CEP-54) each build on one of
-these paths, reportedly at 110\,KB/level~3 (RocksDB), 110\,KB level-1
-RPC and level-3 SSTable dictionaries (ScyllaDB), and 64\,KiB
-dictionaries importable via \texttt{nodetool} (Cassandra).
-\todo{Stated as the claims the paper intends to make, not verified ones:
-none of RocksDB, ScyllaDB, or Cassandra is checked out here or in
-\texttt{references.bib}. Pin exact file:line citations before
-submission.} We use these budgets and levels directly as evaluation
-targets in \S\ref{sec:evaluation-parity} regardless of citation status.
+content. \textbf{RocksDB's} dictionary path is opt-in and off by
+default (\texttt{CompressionOptions::\-max\_dict\_bytes}$=0$); once
+enabled, \texttt{use\_\-zstd\_\-dict\_\-trainer}$=$\texttt{true} picks our
+trainer path by default, at 110\,KB, level 3
+(\texttt{compression\_type.h}:238,302, RocksDB \texttt{v11.8.1}) -- so
+Experiment~D (\S\ref{sec:evaluation-parity}) tests an opt-in,
+non-default path. \textbf{ScyllaDB} trains RPC and SSTable dictionaries through the same
+110\,KiB \texttt{ZDICT\_trainFromBuffer} call
+(\texttt{dict\_trainer.hh}:76),
+but only one is deployed by default: RPC training defaults to off
+(\texttt{rpc\_\-dict\_\-training\_\-when}$=$\texttt{NEVER}), so our level-1
+cell is a setting \emph{motivated by} that path, not a production
+claim; SSTable dictionaries, by contrast, we understated -- available
+since release 2025.2, and (commit \texttt{adf9c42}, 2025-10-31)
+ScyllaDB's \emph{default} SSTable compressor since 2025.4, so the
+110\,KiB/level-3 configuration we already test as the deployed default
+(Table~\ref{tab:t1-main}) is production-representative there.
+\textbf{Cassandra's} CEP-54 is not merged or shipped: tracking epic
+CASSANDRA-20902 is \texttt{In Progress}, fix version \texttt{7.x}; its
+code lives only on the unreleased \texttt{cassandra-6.0} branch
+(\texttt{6.0-alpha2}; the latest release is 5.0.x), and CASSANDRA-21154
+removed its auto-training as explicit ``dead code.'' We keep the
+64\,KiB figure as the code's own default
+(\texttt{maxDictionarySize}$=65536$,
+\texttt{Compression\-Dictionary\-Training\-Config.java}), though CEP-54's
+design document itself recommends ``around 100KiB,'' closer to the
+110\,KiB figure used elsewhere. We use these budgets and levels as
+evaluation targets in \S\ref{sec:evaluation-parity}, each labeled by
+what it is -- shipped default, evaluation setting motivated by an
+off-by-default path, or unreleased branch -- not uniformly
+``production.''
+\end{sloppypar}
 
 % =====================================================================
 \section{Diagnosis (measurements on real corpora)}
@@ -411,12 +436,14 @@ input and does different work for different answers.
 \subsection{Guarantees}
 \label{sec:design-guarantees}
 
+\begin{sloppypar}
 Let $S$ be the size ladder, $B$ the caller's budget cap, and
 $C(B) = \{(t,s) : t \in \{\text{fastCOVER}, \text{COVER}\},\ s \in S,\ s
 \le B\} \cup \{\text{floor}(B)\}$ the Stage-1 candidate set, where
 $\text{floor}(B) = (\text{fastCOVER}, \min(B, 110\,\text{KiB}))$. The
 tool returns $\arg\max_{c \in C(B)} r_{\text{val}}(c)$, the candidate
 with the best measured validation-split compression ratio.
+\end{sloppypar}
 
 \begin{proposition}[Budget monotonicity]
 \label{prop:budget-monotonicity}
@@ -457,7 +484,8 @@ user records), \texttt{gharchive} (20{,}000 GitHub events),
 50-row NYC 311 CSV fragments), each split 80/20 by seeded shuffle, with
 heldout compressed exactly once per configuration. We evaluate at level
 3 (RocksDB/ScyllaDB SSTable/Cassandra default) and 19 (archival), plus
-level 1 for the ScyllaDB RPC cell, on an Apple M4 against zstd
+level 1 for a cell motivated by ScyllaDB's (off-by-default) RPC path
+(\S\ref{sec:background-deployment}), on an Apple M4 against zstd
 \texttt{82d322c} (v1.6.0), every dictionary round-trip-verified against
 an independent stock binary; x86 replication of throughput is planned
 but not run (\S\ref{sec:discussion}). Midway through this work the
@@ -509,16 +537,18 @@ substantially less (e.g.\ 892\,KiB against a 2\,MiB request on
 from \S\ref{sec:diagnosis-cliff}: part of ``we used a bigger dictionary''
 is ``we could use a bigger dictionary.''
 
-Reproducing three production configurations directly: at Cassandra's
-64\,KiB level-3 budget we beat the stock trainer on three corpora
-(+0.4\% to +1.7\%) and tie exactly on two, no losses -- ties occur where
-no ladder candidate beats the incumbent-equivalent floor, so the tool
-returns the dictionary the user already had, the anytime guarantee
-(\S\ref{sec:design-guarantees}) operating as designed. At ScyllaDB's
-level-1, 110\,KiB RPC setting we win on all five corpora, +1.6\% to
-+8.1\%. RocksDB's no-trainer fallback ranks between no dictionary and
-the stock trainer in nine of ten cells and trails our pipeline by a
-median of 18\%.
+Reproducing Cassandra's shipped default directly and two further
+deployment-motivated settings (\S\ref{sec:background-deployment}): at
+Cassandra's 64\,KiB level-3 budget we beat the stock trainer on three
+corpora (+0.4\% to +1.7\%) and tie exactly on two, no losses -- ties
+occur where no ladder candidate beats the incumbent-equivalent floor,
+so the tool returns the dictionary the user already had, the anytime
+guarantee (\S\ref{sec:design-guarantees}) operating as designed. At a
+level-1, 110\,KiB setting -- the budget and level ScyllaDB's RPC path
+would use if enabled, though that path defaults to off -- we win on all
+five corpora, +1.6\% to +8.1\%. RocksDB's opt-in, non-default
+no-trainer fallback ranks between no dictionary and the stock trainer
+in nine of ten cells and trails our pipeline by a median of 18\%.
 
 \subsection{Alternative trainers and ablation}
 \label{sec:evaluation-baselines}
@@ -545,6 +575,7 @@ reproducibility was not independently confirmed post-rebuild
 \subsection{Equal compute, cost, and unmeasured claims}
 \label{sec:evaluation-equalcompute}
 
+\begin{sloppypar}
 Our trainer spends minutes to tens of minutes where \texttt{zstd
 --train} spends 0.2--3.2\,s (\texttt{results/benchmark\_v2.csv}). The
 corresponding manual control gives the incumbent our wall-clock budget
@@ -563,6 +594,7 @@ experiment silently selects the broken dictionary. Peak-RSS on
 \texttt{github\_users}/\texttt{gharchive} shows batch-compression memory
 essentially unaffected by dictionary choice (2.8--6.0\,MB).
 \label{sec:evaluation-cost}
+\end{sloppypar}
 
 Compression/decompression throughput, bootstrap confidence intervals
 over the heldout deltas, and cross-codec transfer to Brotli and LZ4 were
@@ -585,12 +617,22 @@ Moffat and Wirth's relative Lempel-Ziv dictionary
 construction~\cite{liao2016cover}, a covering problem over sampled
 substrings; zstd adopted it as \texttt{--train-cover} and later added
 the fastCOVER approximation that is today's CLI default, unchanged
-since 2018. We reuse the covering heuristic unmodified; our contribution
+since 2018. fastCOVER itself has no academic description at all: it
+entered zstd via pull requests \#1250 and \#1274 (2018), not a paper.
+We reuse the covering heuristic unmodified; our contribution
 is the selection layer around it. That paper has on the order of a
-dozen citations against hundreds of vendored copies -- absorbed into
-deployments under a feature-flag name it never used, the lesson being
-that a contribution reaches the literature only if the paper, name, and
-artifact are the same object. \texttt{klauspost/compress}~\cite{klauspost}
+dozen citations against hundreds of vendored copies, absorbed into
+deployments under a feature-flag name it never used. Level-dependence
+itself is not a new observation: a zstd maintainer noted in 2019 that
+training at the level you actually compress at ``will tune the
+dictionary better''~\cite{zstdissue1572}, and a 2022 request to expose
+a level parameter was declined for ABI
+stability~\cite{zstdissue3213}. Our claim is the \emph{mechanism}
+(three independent, opposite-sign inversions traced to hash-table
+overwrite vs.\ full indexing, \S\ref{sec:diagnosis-level-blindness})
+and \emph{magnitude} -- including, to our knowledge, the first
+measurement of the disabled repcode-seeding path -- not the base
+observation. \texttt{klauspost/compress}~\cite{klauspost}
 is the only other tool we know of that emits standard-format zstd
 dictionaries and exposes a level-targeting flag, anticipating our
 level-awareness argument; we benchmark it directly
@@ -630,11 +672,19 @@ tuning -- adjacent to us (it tunes the encoder, we build the dictionary)
 but evidence that per-workload specialization is known practice,
 unpublished science. OpenZL~\cite{openzl}, training format-specific
 compression graphs, is the heavyweight successor direction, its
-dictionary story left to its own future work. RocksDB, ScyllaDB, and
-Cassandra CEP-54 (\S\ref{sec:background-deployment}) use trained
-dictionaries in production, and the web has standardized dictionary
-transport~\cite{rfc9842}; this dictates the configurations matched in
-\S\ref{sec:evaluation-parity} rather than only our own chosen sizes.
+dictionary story left to its own future work. Deployment status varies
+by system and path (\S\ref{sec:background-deployment}): ScyllaDB's
+SSTable path and, opt-in, RocksDB use trained dictionaries in
+production; Cassandra's CEP-54 targets the same but is unreleased; and
+ScyllaDB's own RPC-dictionary path is off by default. The web has
+standardized dictionary transport~\cite{rfc9842}, but Chrome's own
+use-counters put overall usage at roughly 0.09\% of page loads and its
+zstd variant two orders of magnitude smaller
+still~\cite{chromestatususecounters}, and Cloudflare's implementation is
+a passthrough beta that itself generates no
+dictionaries~\cite{cloudflaresharedddict}. This variation is why
+\S\ref{sec:evaluation-parity} matches these specific configurations
+rather than only our own chosen sizes.
 
 % =====================================================================
 \section{Discussion and limitations}
@@ -685,10 +735,9 @@ training/decompression budget are natural next steps given the
 dictionaries. We have drafted, but not submitted, four upstream fixes
 (\S\ref{sec:diagnosis-cliff}): charge the objective by requested rather
 than emitted capacity, scale the zero-score tolerance, fix
-\texttt{displayLevel}, and shrink from the front. Our refinement stage
-adapts RLZ pruning ideas~\cite{hoobin2011rlz,puglisi2023rlz} rather than
-inventing them; a more general, ML-guided scoring loop, not the greedy
-round-by-round acceptance used here, is future work.
+\texttt{displayLevel}, and shrink from the front. A more general,
+ML-guided scoring loop, not the greedy round-by-round acceptance used
+here, is future work.
 
 % =====================================================================
 \section{Conclusion}
