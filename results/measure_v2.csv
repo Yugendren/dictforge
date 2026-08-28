@@ -1,0 +1,13 @@
+experiment,corpus,level,variant,metric,value,unit,note
+T1,github_users,3,default,dict_size,112640,bytes,
+T1,github_users,3,default,compress_throughput_MBps,7.857506,MB/s,"median of 3 reps=['0.200', '0.180', '0.190']s; raw_bytes=1491789; decimal MB=1e6 bytes; nice -n10, serial, single-threaded"
+T1,github_users,3,default,decompress_throughput_MBps,7.826177,MB/s,"median of 3 reps=['0.190', '0.191', '0.197']s; raw_bytes=1491789; decimal MB=1e6 bytes; integrity_check=OK"
+T1,github_users,3,full,dict_size,1048576,bytes,
+T1,github_users,3,full,compress_throughput_MBps,3.081093,MB/s,"median of 3 reps=['0.806', '0.484', '0.358']s; raw_bytes=1491789; decimal MB=1e6 bytes; nice -n10, serial, single-threaded"
+T1,github_users,3,full,decompress_throughput_MBps,4.694681,MB/s,"median of 3 reps=['0.317', '0.327', '0.318']s; raw_bytes=1491789; decimal MB=1e6 bytes; integrity_check=OK"
+T1,github_users,19,default,dict_size,112640,bytes,
+T1,github_users,19,default,compress_throughput_MBps,2.433004,MB/s,"median of 3 reps=['0.550', '0.613', '0.872']s; raw_bytes=1491789; decimal MB=1e6 bytes; nice -n10, serial, single-threaded"
+T1,github_users,19,default,decompress_throughput_MBps,2.957110,MB/s,"median of 3 reps=['0.377', '0.504', '0.536']s; raw_bytes=1491789; decimal MB=1e6 bytes; integrity_check=OK"
+T1,github_users,19,full,dict_size,1048575,bytes,
+T1,github_users,19,full,compress_throughput_MBps,1.727128,MB/s,"median of 3 reps=['0.835', '0.864', '0.937']s; raw_bytes=1491789; decimal MB=1e6 bytes; nice -n10, serial, single-threaded"
+T1,github_users,19,full,decompress_throughput_MBps,3.579299,MB/s,"median of 3 reps=['0.417', '0.408', '0.705']s; raw_bytes=1491789; decimal MB=1e6 bytes; integrity_check=OK"
