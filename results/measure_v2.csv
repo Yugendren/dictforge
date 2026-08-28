@@ -23,3 +23,15 @@ T1,gharchive,19,default,decompress_throughput_MBps,23.837561,MB/s,"median of 3 r
 T1,gharchive,19,full,dict_size,2097152,bytes,
 T1,gharchive,19,full,compress_throughput_MBps,2.665790,MB/s,"median of 3 reps=['5.031', '4.513', '4.236']s; raw_bytes=12030859; decimal MB=1e6 bytes; nice -n10, serial, single-threaded"
 T1,gharchive,19,full,decompress_throughput_MBps,28.719173,MB/s,"median of 3 reps=['0.419', '0.425', '0.417']s; raw_bytes=12030859; decimal MB=1e6 bytes; integrity_check=OK"
+T1,weblogs,3,default,dict_size,112640,bytes,
+T1,weblogs,3,default,compress_throughput_MBps,13.105668,MB/s,"median of 3 reps=['0.699', '0.497', '0.504']s; raw_bytes=6606411; decimal MB=1e6 bytes; nice -n10, serial, single-threaded"
+T1,weblogs,3,default,decompress_throughput_MBps,19.266794,MB/s,"median of 3 reps=['0.475', '0.341', '0.343']s; raw_bytes=6606411; decimal MB=1e6 bytes; integrity_check=OK"
+T1,weblogs,3,full,dict_size,1048576,bytes,
+T1,weblogs,3,full,compress_throughput_MBps,18.069107,MB/s,"median of 3 reps=['0.356', '0.366', '0.377']s; raw_bytes=6606411; decimal MB=1e6 bytes; nice -n10, serial, single-threaded"
+T1,weblogs,3,full,decompress_throughput_MBps,13.062118,MB/s,"median of 3 reps=['0.418', '0.546', '0.506']s; raw_bytes=6606411; decimal MB=1e6 bytes; integrity_check=OK"
+T1,weblogs,19,default,dict_size,112640,bytes,
+T1,weblogs,19,default,compress_throughput_MBps,3.112519,MB/s,"median of 3 reps=['2.123', '1.660', '3.014']s; raw_bytes=6606411; decimal MB=1e6 bytes; nice -n10, serial, single-threaded"
+T1,weblogs,19,default,decompress_throughput_MBps,6.736417,MB/s,"median of 3 reps=['0.817', '0.981', '1.628']s; raw_bytes=6606411; decimal MB=1e6 bytes; integrity_check=OK"
+T1,weblogs,19,full,dict_size,2097159,bytes,
+T1,weblogs,19,full,compress_throughput_MBps,1.427014,MB/s,"median of 3 reps=['4.630', '5.882', '3.929']s; raw_bytes=6606411; decimal MB=1e6 bytes; nice -n10, serial, single-threaded"
+T1,weblogs,19,full,decompress_throughput_MBps,10.920480,MB/s,"median of 3 reps=['0.619', '0.472', '0.605']s; raw_bytes=6606411; decimal MB=1e6 bytes; integrity_check=OK"
