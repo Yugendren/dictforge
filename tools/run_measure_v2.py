@@ -45,7 +45,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 import run_campaign as rc  # noqa: E402 -- reuse list_files/dir_raw_bytes/batch_compress_sizes/parse_max_rss/log
-import patch_repcodes as pr  # noqa: E402 -- find_repcode_field for raw dict-content extraction
 
 ZSTD = rc.ZSTD
 CSV_PATH = ROOT / "results" / "measure_v2.csv"
@@ -53,6 +52,7 @@ CAMPAIGN_DIR = ROOT / "runs" / "campaign_v2"
 TMP = ROOT / "runs" / "measure_v2_tmp"
 VENV_PY = ROOT / ".venv" / "bin" / "python3"
 BOOTSTRAP_SCRIPT = ROOT / "tools" / "measure_v2_bootstrap.py"
+DICT_HEADER_SIZE_BIN = ROOT / "tools" / "dict_header_size"
 
 CORPORA = rc.CORPORA  # github_users, gharchive, weblogs, apijson, csvrows
 LEVELS = rc.LEVELS    # 3, 19
@@ -390,9 +390,22 @@ def run_t3():
 # ---------------------------------------------------------------------
 
 def extract_dict_content(dict_path):
+    """Raw content bytes after a finalized zstd dictionary's header.
+
+    Uses tools/dict_header_size (ZDICT_getDictHeaderSize()) rather than a
+    byte-search for the default repcode signature (1,4,8): trainer.py's
+    stage 3 overwrites that field in place with corpus-specific offsets on
+    every accepted target_level>=16 "full" dict, so the default signature
+    is absent from those files even though the header size itself is
+    unaffected (patching only changes the field's value, not its
+    position). See tools/dict_header_size.c for the full rationale.
+    """
+    r = subprocess.run([str(DICT_HEADER_SIZE_BIN), str(dict_path)], capture_output=True, text=True, timeout=30)
+    if r.returncode != 0:
+        raise RuntimeError(f"dict_header_size failed on {dict_path}: {r.stderr.strip()}")
+    header_size = int(r.stdout.strip())
     data = dict_path.read_bytes()
-    pos = pr.find_repcode_field(data)
-    return data[pos + 12:]
+    return data[header_size:]
 
 
 def build_blob(corpus, tmp_dir):
@@ -449,7 +462,7 @@ def run_t4_brotli(corpus, blob_path, raw_size):
                            f"({raw_size}B, {len(rc.list_files(ROOT / 'corpora' / corpus / 'heldout'))} files) "
                            f"since brotli CLI has no recursive/batch mode; dict content extracted from "
                            f"{variant_name.replace('_derived', '') if variant_name != 'nodict' else 'n/a'}.dict "
-                           f"L{level} via find_repcode_field")
+                           f"L{level} via dict_header_size (ZDICT_getDictHeaderSize)")
 
         default_content_path.unlink(missing_ok=True)
         full_content_path.unlink(missing_ok=True)

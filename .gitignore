@@ -8,6 +8,7 @@ __pycache__/
 *.log
 tools/refine_dict
 tools/offset_hist
+tools/dict_header_size
 *.o
 runs/
 paper/figures/
