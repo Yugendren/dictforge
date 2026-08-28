@@ -64,8 +64,16 @@ except ImportError:
     sys.path.insert(0, str(HERE))
     from patch_repcodes import patch_repcodes, find_repcode_field  # noqa: E402
 
-SIZE_LADDER = [2048, 4096, 8192, 16384, 32768, 65536, 112640,
-               262144, 524288, 1048576, 2097152]
+# Fine-grained in the large-size region (~1.25x spacing from 196608 up)
+# because a finer equal-compute sweep found the true optima sitting
+# *between* our old powers-of-two rungs -- at 1310720 and 1572864 bytes,
+# sizes the old ladder [.., 1048576, 2097152] could never land on. That
+# blind spot cost us 2.53% on github_users at L3 (10.202 achievable vs
+# 9.944 with the coarse ladder) plus smaller losses elsewhere. Keep the
+# small sizes as-is; only the >=196608 region needed the finer spacing.
+SIZE_LADDER = [2048, 4096, 8192, 16384, 32768, 65536, 112640, 196608,
+               262144, 393216, 524288, 655360, 786432, 1048576, 1310720,
+               1572864, 1835008, 2097152]
 FLOOR_SIZE_CAP = 112640
 STAGE2_BUCKET = 64
 STAGE2_MAX_ROUNDS = 4
