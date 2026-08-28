@@ -19,3 +19,13 @@ MAIN,gharchive,19,default,112640,8.843008,0.623,zstd --train --maxdict=112640 -T
 MAIN,gharchive,19,tuned,2097152,11.100073,1192.218,trainer.py --stages 1 --time-budget-s 1800
 MAIN,gharchive,19,full,2097152,11.334886,3663.273,trainer.py --stages all --time-budget-s 1800
 MAIN,gharchive,19,rawconcat,112640,7.747225,0.140,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+MAIN,weblogs,3,nodict,0,3.520614,0.000,
+MAIN,weblogs,3,default,112640,6.421379,1.598,zstd --train --maxdict=112640 -T8
+MAIN,weblogs,3,tuned,1310720,7.360002,457.800,trainer.py --stages 1 --time-budget-s 600
+MAIN,weblogs,3,full,1310720,7.344219,494.756,trainer.py --stages all --time-budget-s 600
+MAIN,weblogs,3,rawconcat,112640,5.269548,0.038,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+MAIN,weblogs,19,nodict,0,3.788071,0.000,
+MAIN,weblogs,19,default,112640,8.683779,1.359,zstd --train --maxdict=112640 -T8
+MAIN,weblogs,19,tuned,1572864,10.844671,490.451,trainer.py --stages 1 --time-budget-s 1800
+MAIN,weblogs,19,full,1572871,11.509447,1994.908,trainer.py --stages all --time-budget-s 1800
+MAIN,weblogs,19,rawconcat,112640,7.206095,0.072,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
