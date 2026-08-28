@@ -1,0 +1,11 @@
+experiment,corpus,level,variant,dict_size,ratio,train_wall_s,note
+MAIN,github_users,3,nodict,0,2.953698,0.000,
+MAIN,github_users,3,default,112640,9.646165,1.119,zstd --train --maxdict=112640 -T8
+MAIN,github_users,3,tuned,1048576,10.202290,95.712,trainer.py --stages 1 --time-budget-s 600
+MAIN,github_users,3,full,1048576,9.944199,97.539,trainer.py --stages all --time-budget-s 600
+MAIN,github_users,3,rawconcat,112640,8.318263,0.026,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
+MAIN,github_users,19,nodict,0,3.028970,0.000,
+MAIN,github_users,19,default,112640,9.955016,0.234,zstd --train --maxdict=112640 -T8
+MAIN,github_users,19,tuned,1048576,10.689767,87.503,trainer.py --stages 1 --time-budget-s 1800
+MAIN,github_users,19,full,1048575,11.081317,1955.919,trainer.py --stages all --time-budget-s 1800
+MAIN,github_users,19,rawconcat,112640,9.344356,0.118,"random files concat to 112640B, raw (unfinalized) dict, seed=1729"
