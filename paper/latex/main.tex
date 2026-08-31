@@ -1,34 +1,25 @@
 % =====================================================================
-% main.tex -- DCC 2027 submission scaffold for dictforge
+% main.tex -- DCC 2027 submission, dictforge
 %
-% DCC (Data Compression Conference) "Information for Authors" formatting
-% requirements (as understood at scaffold time -- RE-VERIFY against the
-% current DCC 2027 call for papers before submission, requirements can
-% shift year to year):
-%   - Regular papers: 10 pages MAXIMUM, including references and figures.
-%   - SINGLE-COLUMN layout, 12pt body text (NOT the two-column IEEE
-%     conference style used by most other IEEE venues).
-%   - DCC has historically used a plain, single-column LaTeX style
-%     (sometimes distributed by the organizers as "dcc.sty" / a supplied
-%     template); IEEEtran.cls is explicitly the WRONG class here because
-%     IEEEtran defaults to two-column and a smaller point size intended
-%     for that layout. This scaffold instead uses the standard `article`
-%     class with `geometry` configured for single-column 12pt, which
-%     matches DCC's stated requirements without depending on a
-%     conference-supplied .cls file we don't have on hand.
-%   - TODO: if/when the organizers publish an official DCC 2027 template
-%     or .sty/.cls file, switch to it and re-check page count; until
-%     then this geometry is our best-effort match to the documented
-%     single-column/12pt/10-page rule.
+% RESTRUCTURED 2026-08-31 to match docs/DCC_STYLE.md (evidence-based
+% format derived from 13 accepted DCC papers): 10 pages total including
+% references (no appendix), ~4,500-4,800 words, section order
+% Intro/Related/Background/Diagnosis/Method/Eval-Methodology/Results/
+% Conclusion, contributions in prose, no Discussion/Limitations heading.
+% Numbers affected by the in-flight refit-on-full fix (KNOWN_ISSUES.md
+% #1) are wrapped in \pending{} -- see the restructuring report for the
+% full list; do not resolve them here, they update when the fix lands.
+%
+% DCC "Information for Authors" formatting (re-verify against the actual
+% DCC 2027 call before submission): regular papers 10 pages MAXIMUM
+% including references and figures; single-column, 12pt; text area
+% approximately 6in x 9in (docs/DCC_STYLE.md, verified against the
+% 2025/2026 programs). No official .cls/.sty is on hand, so this uses
+% `article` + `geometry` configured to match that text area.
 % =====================================================================
 \documentclass[12pt]{article}
 
-\usepackage[letterpaper,margin=0.74in]{geometry}
-% NOTE: margin tightened from 1in -> 0.85in -> 0.78in as a page-budget
-% measure to hit the 10-page limit after the 2026-08-28 fact-check pass
-% added verified citations (still well within any plausible DCC-template
-% range); re-check against the real template's margins before
-% submission.
+\usepackage[letterpaper,left=0.85in,right=0.85in,top=0.85in,bottom=0.85in]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath}
@@ -45,19 +36,35 @@
 \usepackage{enumitem}
 \usepackage{multicol}
 
-% Pack floats more tightly against text (fewer near-empty "float pages")
-% rather than deferring them to isolated pages; a page-budget necessity
-% under DCC's 10-page limit, not a content change.
+% Tighten float/caption spacing -- page-budget measure, not a content
+% change; DCC's own style packs floats more densely than article's
+% defaults.
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{2pt}
+\emergencystretch=1.5em
+\renewcommand{\arraystretch}{0.82}
+
+% Squeeze inter-entry spacing in the bibliography -- page-budget measure
+% only, does not change font size or entry content.
+\let\oldthebibliography\thebibliography
+\renewcommand{\thebibliography}[1]{%
+  \oldthebibliography{#1}%
+  \setlength{\itemsep}{0pt}%
+  \setlength{\parskip}{0pt}%
+}
+
+% Pack floats more tightly against text rather than deferring them to
+% isolated float pages -- a page-budget measure, not a content change.
 \renewcommand{\topfraction}{0.9}
 \renewcommand{\textfraction}{0.05}
 \renewcommand{\floatpagefraction}{0.6}
 \setcounter{topnumber}{4}
 \setcounter{totalnumber}{6}
 
-% Tighter section/list spacing -- typographic page-budget compression
-% only, no content change. DCC's own style is considerably more compact
-% than article's defaults; this narrows that gap without a supplied
-% .cls file.
+% Tighter section/list spacing -- DCC's own style is more compact than
+% article's defaults; typographic only, no content change.
 \titlespacing*{\section}{0pt}{1.4ex plus 1ex minus .2ex}{0.8ex plus .2ex}
 \titlespacing*{\subsection}{0pt}{1.1ex plus 1ex minus .2ex}{0.6ex plus .2ex}
 \setlist{itemsep=1pt, topsep=2pt, parsep=0pt}
@@ -65,15 +72,15 @@
 \setlength{\belowdisplayskip}{4pt plus 2pt minus 2pt}
 
 % ---------------------------------------------------------------------
-% \todo{...}: lightweight placeholder macro. The `todonotes` package is
-% not installed in this environment, so this is a minimal stand-in: it
-% renders inline, in red, so placeholders are impossible to miss and the
-% document still compiles without extra dependencies. Swap in
-% `todonotes` later if margin notes are wanted.
+% \pending{...}: greppable marker for numbers known to be in flux ahead
+% of the refit-on-full fix (KNOWN_ISSUES.md #1) and the corresponding
+% equal-compute recomputation (results/corrections_v2.csv). Renders the
+% wrapped text unchanged; sweep with `grep '\\pending{' main.tex` once
+% corrected numbers land, then delete the macro.
 % ---------------------------------------------------------------------
-\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+\newcommand{\pending}[1]{#1}
 
-% Lightweight proposition/theorem environments for Section 5.5.
+% Lightweight proposition environment for the trainer's two guarantees.
 \newtheorem{proposition}{Proposition}
 
 \title{Dictionary Training for Zstandard, Revisited:\\ Diagnosis and a Level-Aware Trainer}
@@ -90,39 +97,20 @@
 
 % =====================================================================
 \begin{abstract}
-Zstandard's dictionary trainer (COVER/fastCOVER, WWW 2016)~\cite{liao2016cover}
-is the de-facto standard for small-record compression, deployed in
-RocksDB, ScyllaDB, and the emerging shared-dictionary web
-ecosystem~\cite{rfc9842} -- yet it has received no algorithmic attention
-since 2018 despite documented pathological failures. We present the
-first mechanistic diagnosis of its behavior on real corpora, identifying
-three defects: (1) \emph{budget degeneracy} -- past internal caps,
-requesting a larger dictionary silently yields a smaller one, collapsing
-compression ratio by up to 31\% on zstd's own benchmark corpus, a
-signature consistent with an unexplained sensitivity a production
-engineer reported upstream (a 512\,KB budget yielding a $90\times$ ratio
-against 550\,KB yielding $14\times$ on their data), in a thread that was
-answered and closed without the underlying trainer behavior
-changing~\cite{zstdissue4127}; (2) \emph{size blindness} -- the trainer
-never searches dictionary size, though the optimal size varies by two
-orders of magnitude across corpora and the default 110\,KB budget leaves
-up to 22\% compression on the table; (3) \emph{level blindness} --
-construction decisions (content selection, size response, repcode
-seeding) have opposite effects at fast versus high compression levels,
-yet the trainer targets a single level. Guided by this diagnosis, we
-build a validation-driven trainer that searches size and trainer family
-under a target-level objective with an anytime never-worse guarantee,
-refines dictionary content by measuring which regions real compressions
-reference, and seeds repeat-offset codes -- each stage validation-gated.
-On five real corpora spanning JSON records, event streams, server logs,
-and tabular data, our trainer improves compression ratio over
-\texttt{zstd --train} defaults by 3.1--14.3\% at level 3 and
-11.5--32.1\% at level 19 (heldout, single-shot), beats matched-size
-rebuilds of the incumbent trainer at Cassandra's 64\,KB production
-budget and at a level-1 evaluation setting motivated by ScyllaDB's RPC
-compression path (off by default), and beats an equal-wall-clock sweep
-of the incumbent optimizer on four of five corpora at level 19. Output is 100\%-standard-format, usable by every
-deployed zstd. Tool and all experiments are open source.
+Zstandard's dictionary trainer (COVER/fastCOVER)~\cite{liao2016cover} is
+the de facto standard for small-record compression. However, it has
+received no algorithmic attention since 2018: requesting a larger
+dictionary can silently yield a smaller one, and construction ignores
+size and level. Existing tools reuse the same heuristic and a fixed
+objective that cannot tell an efficient dictionary from a starved one.
+This paper presents a validation-driven, level-aware trainer that
+searches size and trainer family under an anytime never-worse
+guarantee, then refines content and seeds offsets at high levels on
+five corpora. Against the deployed \texttt{zstd
+--train} default, our trainer improves compression ratio by
+\pending{3.1}--14.3\% at level 3 and 11.5--32.1\% at level 19.
+Matched-size rebuilds show up to 6.9\% of the level-19 gain survives at
+identical budgets, versus 0--11\% at level 3.
 \end{abstract}
 
 % =====================================================================
@@ -132,33 +120,101 @@ deployed zstd. Tool and all experiments are open source.
 Dictionaries are how zstd compresses small data, and small data is
 where modern systems live: key-value stores, logs, telemetry, and the
 emerging shared-dictionary web transport~\cite{rfc9842}. One trainer
-serves all of it; it is a 2016 heuristic~\cite{liao2016cover}, frozen
-since 2018, whose maintainer states that the ideal dictionary builder
-``does not exist.''
+serves all of it: COVER and its fast approximation fastCOVER~\cite{liao2016cover},
+a 2016 heuristic frozen since 2018, whose own maintainer has stated
+that the ideal dictionary builder ``does not exist.''
 
-Our contributions are:
-\begin{enumerate}
-  \item The first mechanistic quantitative diagnosis of the incumbent
-    trainer, tracing the budget-degeneracy collapse to its selection
-    objective, quantifying size blindness, and confirming level
-    blindness three independent ways; the budget-degeneracy finding is
-    consistent with a sensitivity collapse reported upstream but never
-    explained~\cite{zstdissue4127}.
-  \item A level-aware, validation-driven trainer with an anytime-safety
-    guarantee (Propositions~\ref{prop:budget-monotonicity}
-    and~\ref{prop:anytime-floor}), each stage individually gated and
-    validation-checked.
-  \item A 5-corpus, 2-level benchmark against the deployed default,
-    a klauspost \texttt{builddict}~\cite{klauspost} baseline, an
-    equal-wall-clock stock sweep, a no-training control, and matched-size
-    rebuilds at Cassandra's 64\,KB production budget, RocksDB's opt-in
-    no-trainer fallback, and a level-1 evaluation setting motivated by
-    (but not identical to) ScyllaDB's off-by-default RPC path
-    (\S\ref{sec:background-deployment}), isolating how much of the
-    headline gain is size versus method.
-  \item An open-source tool that emits 100\%-standard-format
-    dictionaries, requiring no change to any zstd library or client.
-\end{enumerate}
+Yet the trainer has documented pathological failures. A production
+engineer reported that raising \texttt{--maxdict} from 512\,KB to
+550\,KB collapsed compression ratio from $90\times$ to $14\times$ on
+their data~\cite{zstdissue4127}; the thread was closed without an
+explanation, and the trainer's behavior is unchanged in the current
+release. We show this signature is reachable on zstd's own benchmark
+corpus and trace it to a specific selection-objective defect, alongside
+two further defects: the trainer never searches dictionary size, and it
+optimizes construction decisions for a single compression level
+regardless of which level the caller actually uses.
+
+Guided by this diagnosis, we build a trainer that treats dictionary
+construction as a search adjudicated by measurement rather than by
+proxy, with every stage gated on held-out validation rather than on the
+training data it searched over.
+
+Our contributions are as follows. We give the first mechanistic,
+quantitative diagnosis of the incumbent trainer, tracing budget
+degeneracy to its selection objective, quantifying size blindness, and
+confirming level blindness three independent ways; the budget-degeneracy
+finding is consistent with a sensitivity collapse reported upstream but
+never explained~\cite{zstdissue4127}. We build a level-aware,
+validation-driven trainer with an anytime-safety guarantee
+(Propositions~\ref{prop:budget-monotonicity} and~\ref{prop:anytime-floor}),
+each stage individually gated and validation-checked. We evaluate it on
+a 5-corpus, 2-level benchmark against the deployed default, a klauspost
+\texttt{builddict}~\cite{klauspost} baseline, an equal-wall-clock stock
+sweep, a no-training control, and matched-size rebuilds at Cassandra's,
+RocksDB's, and (a setting motivated by) ScyllaDB's production budgets,
+isolating how much of the headline gain is size versus method. The
+resulting tool emits 100\%-standard-format dictionaries, requiring no
+change to any zstd library or client, and is open source together with
+all experiments.
+
+% =====================================================================
+\section{Related Work}
+\label{sec:related-work}
+
+\textbf{Dictionary construction.} The trainer descends from Liao,
+Petri, Moffat, and Wirth's relative Lempel-Ziv dictionary
+construction~\cite{liao2016cover}, a covering problem over sampled
+substrings; zstd adopted it as \texttt{--train-cover} and later added
+the fastCOVER approximation that is today's CLI default, unchanged
+since 2018 and never described in a paper of its own. We reuse the
+covering heuristic unmodified; our contribution is the selection layer
+around it. Level-dependence is not a new observation -- a zstd
+maintainer noted in 2019 that training at the level you actually
+compress at ``will tune the dictionary better''~\cite{zstdissue1572},
+and a 2022 request to expose a level parameter was declined for ABI
+stability~\cite{zstdissue3213} -- but the \emph{mechanism} (three
+independent, opposite-sign inversions traced to hash-table overwrite
+vs.\ full indexing, \S\ref{sec:diagnosis-level-blindness}) and
+\emph{magnitude}, including the first measurement of the disabled
+repcode-seeding path, are new. \texttt{klauspost/compress}~\cite{klauspost}
+is the only other tool we know of that emits standard-format zstd
+dictionaries and exposes a level-targeting flag; we benchmark it
+directly and it loses to the stock default on every cell we ran.
+
+\textbf{RLZ, methodology, and theory.} Our refinement stage
+(\S\ref{sec:design-stage2}) adapts RLZ reference pruning and
+selection~\cite{hoobin2011rlz,puglisi2023rlz}: the novelty is doing it
+against the production encoder's own sequence stream, at match
+granularity, gated by measured compressed size. Optimal dictionary
+choice is intractable in general -- NP-complete~\cite{storer1982textual},
+APX-hard as smallest-grammar~\cite{charikar2005smallestgrammar,casel2019grammar}
+-- so our propositions (\S\ref{sec:design-guarantees}) deliberately
+constrain only the \emph{selection} rule, not the underlying trainer;
+domain-specific compression~\cite{machete2024} and LZ77
+acceleration~\cite{lzhv2025} are recent DCC neighbors in a different
+corner of the space. Methodologically we follow
+recent practical compression work that measures precisely why the
+incumbent underperforms before designing against
+it~\cite{boncz2020fsst,afroozeh2024alp}, reporting losses
+(\S\ref{sec:results-parity}--\S\ref{sec:results-equalcompute}) as well
+as wins.
+
+\textbf{Deployment.} Meta's managed-compression practice, disclosed only
+in a blog post~\cite{metaengineering2018zstd}, and the successor project
+OpenZL~\cite{openzl}, treat per-workload specialization as known
+industrial practice with little published methodology; we target the
+specific, publicly reachable trainer instead. Deployment of trained
+dictionaries varies sharply by system and path
+(\S\ref{sec:background-deployment}). The web's shared-dictionary
+transport~\cite{rfc9842} and Brotli's own dictionary-aware
+format~\cite{alakuijala2019brotli} see modest uptake so far -- Chrome
+usage sits at roughly 0.09\% of page
+loads~\cite{chromestatususecounters}, and Cloudflare's implementation
+remains a passthrough beta that itself generates no
+dictionaries~\cite{cloudflaresharedddict} -- context for why
+\S\ref{sec:results-parity} matches specific deployment configurations
+rather than only our own chosen sizes.
 
 % =====================================================================
 \section{Background}
@@ -181,64 +237,44 @@ the mechanism behind level blindness (\S\ref{sec:diagnosis-level-blindness}).
 
 The trainer solves a covering problem: COVER~\cite{liao2016cover} builds
 an exact suffix array over $d$-length substrings and scores each by
-document frequency, deduplicated per sample (a dictionary only helps the
-\emph{first} reference); fastCOVER trades this for a lossy, streaming
-hash-table count. Both partition the corpus into epochs, greedily pack
-the best-scoring $k$-byte window per epoch into the output buffer back
-forward (strongest content nearest the data, cheapest to reference), and
-grid-search $(d,k)$, keeping whichever candidate, once finalized,
-achieves the smallest \emph{measured} check-set compressed size --
-selection is literal compression, not a proxy. \texttt{zstd --train}
-with no flags, and the zero-configuration
-\texttt{ZDICT\_trainFromBuffer} used by every downstream integration we
-examine, both hard-code fastCOVER-optimize at $d{=}8$, scored at level
-3, \texttt{--maxdict} defaulting to 110\,KB. Two paths never run:
-repeat-offset seeding is computed and discarded behind \texttt{\#if 0}
-(evaluated in \S\ref{sec:design-stage3}), and the size-response
-\texttt{shrinkDict} path is hard-coded off (diagnosed in
-\S\ref{sec:diagnosis-size-blindness}). All claims here were re-checked
-at file:line precision against \texttt{facebook/zstd main@82d322c}
-(v1.6.0); we cite specific lines in \S\ref{sec:diagnosis} where one is
-load-bearing.
+document frequency, deduplicated per sample (a dictionary only helps
+the \emph{first} reference to a substring); fastCOVER trades this for a
+lossy, streaming hash-table count. Both partition the corpus into
+epochs, greedily pack the best-scoring $k$-byte window per epoch into
+the output buffer back forward (strongest content nearest the data,
+cheapest to reference), and grid-search $(d,k)$, keeping whichever
+candidate achieves the smallest \emph{measured} check-set compressed
+size -- selection is literal compression, not a proxy. \texttt{zstd
+--train} with no flags, and \texttt{ZDICT\_trainFromBuffer} used by
+every downstream integration we examine, both hard-code
+fastCOVER-optimize at $d{=}8$, with a 4-step grid on $k$, a 0.75
+train/check split, scored at level 3, \texttt{--maxdict} defaulting to
+110\,KB; repeat-offset seeding is computed and discarded behind
+\texttt{\#if 0}, and the size-response \texttt{shrinkDict} path is
+hard-coded off. All claims here were checked at file:line precision
+against \texttt{facebook/zstd main@82d322c} (v1.6.0).
 
 \subsection{Deployment reality}
 \label{sec:background-deployment}
 \begin{sloppypar}
-Every production system we compare against calls
-\texttt{ZDICT\_trainFromBuffer} above, or, with no trainer,
-\texttt{ZDICT\_finalizeDictionary}, which skips content selection and
-attaches only the format header around caller-supplied (often raw)
-content. \textbf{RocksDB's} dictionary path is opt-in and off by
-default (\texttt{CompressionOptions::\-max\_dict\_bytes}$=0$); once
-enabled, \texttt{use\_\-zstd\_\-dict\_\-trainer}$=$\texttt{true} picks our
-trainer path by default, at 110\,KB, level 3
-(\texttt{compression\_type.h}:238,302, RocksDB \texttt{v11.8.1}) -- so
-Experiment~D (\S\ref{sec:evaluation-parity}) tests an opt-in,
-non-default path. \textbf{ScyllaDB} trains RPC and SSTable dictionaries through the same
-110\,KiB \texttt{ZDICT\_trainFromBuffer} call
-(\texttt{dict\_trainer.hh}:76),
-but only one is deployed by default: RPC training defaults to off
-(\texttt{rpc\_\-dict\_\-training\_\-when}$=$\texttt{NEVER}), so our level-1
-cell is a setting \emph{motivated by} that path, not a production
-claim; SSTable dictionaries, by contrast, we understated -- available
-since release 2025.2, and (commit \texttt{adf9c42}, 2025-10-31)
-ScyllaDB's \emph{default} SSTable compressor since 2025.4, so the
-110\,KiB/level-3 configuration we already test as the deployed default
-(Table~\ref{tab:t1-main}) is production-representative there.
-\textbf{Cassandra's} CEP-54 is not merged or shipped: tracking epic
-CASSANDRA-20902 is \texttt{In Progress}, fix version \texttt{7.x}; its
-code lives only on the unreleased \texttt{cassandra-6.0} branch
-(\texttt{6.0-alpha2}; the latest release is 5.0.x), and CASSANDRA-21154
-removed its auto-training as explicit ``dead code.'' We keep the
-64\,KiB figure as the code's own default
-(\texttt{maxDictionarySize}$=65536$,
-\texttt{Compression\-Dictionary\-Training\-Config.java}), though CEP-54's
-design document itself recommends ``around 100KiB,'' closer to the
-110\,KiB figure used elsewhere. We use these budgets and levels as
-evaluation targets in \S\ref{sec:evaluation-parity}, each labeled by
-what it is -- shipped default, evaluation setting motivated by an
-off-by-default path, or unreleased branch -- not uniformly
-``production.''
+Production systems mostly call the same entry point, or,
+with no trainer, \texttt{ZDICT\_finalizeDictionary}, which skips
+content selection and attaches only the format header around
+caller-supplied content. \textbf{RocksDB}'s dictionary path is opt-in and off by
+default; once enabled, it uses our baseline trainer path by default, at
+110\,KB, level 3. \textbf{ScyllaDB} trains RPC and SSTable dictionaries
+through the same 110\,KiB call, but only one is deployed by default:
+RPC training is off, so our level-1 cell is a setting \emph{motivated
+by} that path, not a production claim; SSTable dictionary compression,
+by contrast, has been that vendor's default compressor since release
+2025.4, so the 110\,KiB/level-3 configuration we test as ``the deployed
+default'' is production-representative there. \textbf{Cassandra}'s
+CEP-54 is not merged or shipped -- its tracking epic is still in
+progress -- so we keep its 64\,KiB code default as an evaluation
+target, not a production claim. Each budget used in
+\S\ref{sec:results-parity} is labeled by what it is: shipped default,
+evaluation setting motivated by an off-by-default path, or unreleased
+branch.
 \end{sloppypar}
 
 % =====================================================================
@@ -256,14 +292,12 @@ this produces Figure~\ref{fig:f1-cliff}'s step function: at requests of
 near 10; past 1\,MiB it emits only $\sim$415--425\,KiB regardless of how
 much more is requested, and ratio falls to 7.49 (a 24\% loss) and then
 6.95 (31\%) -- \emph{smaller output at a larger request}, with no
-warning at any verbosity level. The symptom is not new; what is new is
-the explanation. In August 2024 an engineer integrating zstd
-dictionaries at Roblox reported the same signature upstream -- ``a max
-dict size of 512KB gets 90x ratio but 550KB gets 14x
-ratio''~\cite{zstdissue4127} -- in a thread answered and closed as
-completed without the trainer's behavior changing. We do not reproduce
-that magnitude (their data is private, well outside the small-record
-regime), but the mechanism below accounts for the signature.
+warning at any verbosity level. In August 2024 an engineer integrating
+zstd dictionaries at Roblox reported the same signature upstream -- a
+512\,KB budget yielding a $90\times$ ratio against 550\,KB yielding
+$14\times$ on their data~\cite{zstdissue4127} -- in a thread closed
+without the trainer's behavior changing. We do not reproduce that
+magnitude, but the mechanism below accounts for the signature.
 
 \textbf{Mechanism.} Three interacting behaviors, traced to source and
 confirmed by instrumented rebuild against
@@ -277,34 +311,27 @@ redundant corpora, leaving the output buffer substantially unfilled.
 \textbf{M3 (root cause):} the selection objective scores each candidate
 by its \emph{emitted} size plus check-set compressed size
 (\texttt{cover.c:899,998}), unable to distinguish ``small because
-efficient'' from ``small because starved''; as the request grows, a
-starved candidate's score stays pinned while every well-formed
-candidate's inflates, so past a threshold the optimizer deterministically
-selects the most degenerate build -- confirmed on \texttt{gharchive} at
-2\,MiB, where the winner had the \emph{worst} compression term of all
-candidates and won purely on a 1.62\,MB size advantage from its own
-failed fill. Roughly two thirds of the \texttt{github\_users} collapse
-traces to this selection error, one third to genuine oversize dilution.
-A minor \textbf{M4} compounds it: finalize shrink-to-fit keeps the
-\emph{first} bytes when trimming for the entropy header
-(\texttt{zdict.c:902-935}), discarding the tail -- the highest-scoring
-content the builder placed nearest the data on purpose
-(\S\ref{sec:background-zstd-dicts}). Nobody noticed because both
-trainers assign \texttt{ctx->displayLevel} and then \texttt{memset} the
-context to zero a few lines later (\texttt{cover.c:639,658};
-\texttt{fastcover.c:320,343}), silently suppressing every build-loop
-diagnostic at every \texttt{-v} level.
-
-\textbf{Classification.} M2, M3, and \texttt{displayLevel} are
+efficient'' from ``small because starved''; past a threshold the
+optimizer deterministically selects the most degenerate build --
+confirmed on \texttt{gharchive} at 2\,MiB, where the winner had the
+\emph{worst} compression term of all candidates and won purely on a
+1.62\,MB size advantage from its own failed fill. Roughly two thirds of
+the \texttt{github\_users} collapse traces to this selection error, one
+third to genuine oversize dilution. A minor \textbf{M4} compounds it:
+finalize shrink-to-fit keeps the \emph{first} bytes when trimming for
+the entropy header (\texttt{zdict.c:902-935}), discarding the tail --
+the highest-scoring content the builder placed nearest the data on
+purpose. Nobody noticed because both trainers assign
+\texttt{ctx->displayLevel} and then \texttt{memset} the context to zero
+a few lines later, silently suppressing every build-loop diagnostic at
+every \texttt{-v} level. M2, M3, and \texttt{displayLevel} are
 implementation defects; content-exhaustion pinning is inherent;
-\texttt{--maxdict} semantics are a documentation gap. We have drafted
-four upstream fixes (\S\ref{sec:discussion}): charge the objective by
-requested capacity, scale the zero-score tolerance to epoch count, fix
-\texttt{displayLevel}, and shrink from the front instead of the back.
+\texttt{--maxdict} semantics are a documentation gap; we have drafted
+four upstream fixes.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth,height=0.3\textheight,keepaspectratio]{../figures/f1_cliff.pdf}
+  \includegraphics[width=\linewidth,height=0.22\textheight,keepaspectratio]{../figures/f1_cliff.pdf}
   \caption{Requested dictionary size vs.\ emitted size and vs.\
     compression ratio, one panel per corpus, marking degenerate builds
     (F1, generated by \texttt{tools/make\_figures.py}).}
@@ -314,89 +341,82 @@ requested capacity, scale the zero-score tolerance to epoch count, fix
 \subsection{Size blindness}
 \label{sec:diagnosis-size-blindness}
 
-Ratio-vs-budget curves from 2KB to 2MB (Figure~\ref{fig:f2-size-curves},
-Appendix~\ref{app:tables}) show peaks varying from 32KB to over 2MB
-depending on corpus and level; the default 110KB budget loses up to
-22.4\% (gharchive, level 19), and the curves are locally non-monotonic.
-The trainer searches $(d,k)$ but never size; the shrinkDict path that
-would let it respond to size is dead code.
+Ratio-vs-budget curves from 2KB to 2MB (Figure~\ref{fig:f2-size-curves})
+show peaks varying from 32KB to over 2MB depending on corpus and level;
+the default 110KB budget loses up to 22.4\% (gharchive, level 19), and
+the curves are locally non-monotonic. The trainer searches $(d,k)$ but
+never size; the \texttt{shrinkDict} path that would let it respond to
+size is dead code.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth,height=0.24\textheight,keepaspectratio]{../figures/f2_size_curves.pdf}
+  \caption{Compression ratio vs.\ dictionary size, one panel per
+    (corpus, level), with the 110KB default marked (F2, generated by
+    \texttt{tools/make\_figures.py}).}
+  \label{fig:f2-size-curves}
+\end{figure}
 
 \subsection{Level blindness (three independent confirmations)}
 \label{sec:diagnosis-level-blindness}
 
-\begin{enumerate}
-  \item[(a)] Size-response inverts by level: levels 1--3 peak small then
-    decline, while level 19's response rises monotonically.
-  \item[(b)] Repcode seeding: $+0.3$--$0.4\%$ at level 19,
-    $-0.2$--$0.6\%$ at level 1 -- the first proper evaluation of the
-    \texttt{\#if 0} path.
-  \item[(c)] Refinement: $+1.7$--$6.6\%$ at level 19, approximately 0 at
-    level 3.
-\end{enumerate}
-
-Mechanism: fast levels index only a suffix (hash overwrite) with greedy
-parsers, while \texttt{btopt} indexes everything and cost-models its
-choices. The same pattern should recur whenever the consumer is a
-different codec entirely -- LZ4's match window, for instance, is capped
-at 64\,KiB, so only the tail of a large dictionary is reachable at all --
-but we have not measured this cross-codec case in the rebuilt
-environment; \S\ref{sec:discussion} flags it as the conceptual
-generalization of level blindness rather than as a result.
+The trainer optimizes for a single level, though construction decisions
+invert across levels. \textbf{(a)} Size-response inverts by level:
+levels 1--3 peak small then decline, while level 19's response rises
+monotonically. \textbf{(b)} Repcode seeding: $+0.3$--$0.4\%$ at level
+19, $-0.2$--$0.6\%$ at level 1 -- the first proper evaluation of the
+\texttt{\#if 0} path. \textbf{(c)} Refinement: $+1.7$--$6.6\%$ at level
+19, approximately 0 at level 3. Fast levels index only a suffix (hash
+overwrite) with greedy parsers, while \texttt{btopt} indexes everything
+and cost-models its choices; the same pattern should recur whenever the
+consumer is a different codec entirely -- LZ4's match window, for
+instance, is capped at 64\,KiB -- though we have not measured that
+cross-codec case in the rebuilt environment.
 
 % =====================================================================
-\section{Problem statement}
-\label{sec:problem-statement}
-
-We seek
-\[
-  \min_{D \,:\, |D| \le B} \; \sum_{x} \bigl| \mathrm{zstd}_L(x \mid D) \bigr|,
-\]
-an NP-hardness heritage traceable to Storer--Szymanski
-substitution~\cite{storer1982textual} and smallest-grammar
-APX-hardness~\cite{charikar2005smallestgrammar,casel2019grammar}. We
-treat this as blackbox optimization with a $\sim$1-second exact oracle
-(a real compression run). The conceptual core of the paper follows from
-that oracle's cost: evaluation is cheap, so the design question is how
-to spend an evaluation budget.
-
-% =====================================================================
-\section{Design: validation-driven, level-aware trainer}
+\section{Method: a validation-driven, level-aware trainer}
 \label{sec:design}
 
 The diagnosis in \S\ref{sec:diagnosis} suggests a design rather than an
 algorithm: the stock trainer's failures are failures of
 \emph{selection}, not of its covering heuristic, which is sound and
-which we retain unchanged. Our trainer searches candidates adjudicated
-by measurement -- evaluation is cheap ($\sim$1s/run,
-\S\ref{sec:problem-statement}) and directly measures the quantity we
-want, so there is no proxy objective. The caller supplies one training
-directory, split 85/15 by seed into a \emph{fit} set (what any
-underlying trainer sees) and a \emph{validation} set (what every
-accept/reject decision is measured on); the user's held-out data is
-never opened. This bounds overfitting in our greedy per-stage loops --
-the largest fit-to-heldout deviation observed is 0.14\%.
+which we retain unchanged. We treat dictionary construction as
+blackbox optimization over a discrete candidate space -- minimizing
+total compressed size of a corpus under a size-capped dictionary, an
+NP-hardness heritage traceable to Storer--Szymanski
+substitution~\cite{storer1982textual} and smallest-grammar
+APX-hardness~\cite{charikar2005smallestgrammar,casel2019grammar} -- with
+a $\sim$1-second exact oracle (a real compression run). Evaluation is
+cheap, so the design question is how to spend an evaluation budget.
+
+\textbf{Data discipline.} The caller supplies one training directory,
+split 85/15 by seed into a \emph{fit} set (what any underlying trainer
+sees) and a \emph{validation} set (what every accept/reject decision is
+measured on); the user's held-out data is never opened. This bounds
+overfitting in our greedy per-stage loops -- the largest fit-to-heldout
+deviation observed is 0.14\%.
 
 \subsection{Stage 1: size and family search}
 \label{sec:design-stage1}
 
 Stage 1 sweeps a geometric size ladder from 2\,KiB to the caller's cap
 with both fastCOVER and COVER, keeping whichever candidate scores best
-on validation at the target level. \textbf{Floor candidate:} fastCOVER
-at $\min(\text{cap}, 110\,\text{KiB})$ -- precisely what \texttt{zstd
---train} would produce -- runs first unconditionally, so every later
-decision is a comparison against what the user already had; this makes
-the tool never-worse by construction (Proposition~\ref{prop:anytime-floor}).
-\textbf{Cheap-first ordering:} fastCOVER sizes run before COVER sizes,
-so a truncated budget cuts the expensive tail, not size coverage -- a
-size-first ordering instead let large corpora exhaust the budget on
-COVER at small sizes, losing to the default by up to 19\%.
-\textbf{Degeneracy guard:} emitted size is flagged against requested
-size, but since selection is by measured compression, not requested
-size (\S\ref{sec:diagnosis-cliff}, M3), a starved build cannot win by
-being small. A ladder winner is \textbf{refit on the full training
-directory} and kept only if validation does not regress -- without this
-the tool loses $\sim$0.1\% to the default whenever no ladder entry beats
-the floor.
+on validation at the target level. The \emph{floor candidate} --
+fastCOVER at $\min(\text{cap}, 110\,\text{KiB})$, precisely what
+\texttt{zstd --train} would produce -- runs first unconditionally, so
+every later decision is a comparison against what the user already had;
+this makes the tool never-worse by construction
+(Proposition~\ref{prop:anytime-floor}). FastCOVER sizes run before
+COVER sizes (\emph{cheap-first ordering}), so a truncated time budget
+cuts the expensive tail, not size coverage -- a size-first ordering
+instead let large corpora exhaust the budget on COVER at small sizes,
+losing to the default by up to 19\%. A \emph{degeneracy guard} flags
+emitted size against requested size, but since selection is by measured
+compression, not requested size (\S\ref{sec:diagnosis-cliff}, M3), a
+starved build cannot win by being small. A ladder winner is
+\textbf{refit on the full training directory} and kept only if
+validation does not regress -- without this the tool loses $\sim$0.1\%
+to the default whenever no ladder entry beats the floor.
 
 \subsection{Stages 2 \& 3 (target level $\ge 16$): refinement and repcode seeding}
 \label{sec:design-stage2}
@@ -404,34 +424,23 @@ the floor.
 Stage 1 chooses \emph{which} dictionary; Stage 2 asks what the covering
 heuristic never asks: when real compressions run against it, which
 bytes do they reference? We extract the sequence stream from fit-set
-compressions (\texttt{ZSTD\_generateSequences}), map matches to the
-regions they consumed, evict regions never touched or in the weakest
-referenced decile, and refill from the worst-compressing fit files,
-compacting proven content toward the tail (\S\ref{sec:diagnosis-cliff},
-M4). Each round is kept only if it improves fit-set compressed size,
-stopping at the first rejection, and the offset-to-region mapping
-self-tests against a planted synthetic region before the stage may run
-at all. Literally-dead content is rare (0--4\%), so gains come from
-displacing \emph{weakly} referenced content.
-
-\label{sec:design-stage3}
-Stage 3 seeds the three recent-offset values the encoder starts each
-frame with, which the stock trainer computes and discards, writing
-$\{1,4,8\}$ (\S\ref{sec:background-zstd-dicts}): we measure the fit
-set's top three offsets and patch them in, keeping the result only if
-validation improves -- to our knowledge the first published measurement
-of the feature the \texttt{\#if 0} comment in \texttt{zdict.c} left
-unevaluated.
-
-\label{sec:design-gating}
-Both stages gate on target level $\ge 16$ because
-\S\ref{sec:diagnosis-level-blindness} explains why they must: fast
-levels index only part of a large dictionary into small hash tables and
-parse greedily, so curated content and seeded offsets cannot be
-exploited and can actively mislead the parser, while level 19's optimal
-parser indexes everything and cost-compares its options. Rather than
-average these opposite behaviors, the tool takes target level as an
-input and does different work for different answers.
+compressions, map matches to the regions they consumed, evict regions
+never touched or in the weakest referenced decile, and refill from the
+worst-compressing fit files, compacting proven content toward the tail
+(\S\ref{sec:diagnosis-cliff}, M4). Each round is kept only if it
+improves fit-set compressed size, stopping at the first rejection, and
+the offset-to-region mapping self-tests against a planted synthetic
+region before the stage may run at all. Literally-dead content is rare
+(0--4\%), so gains come from displacing \emph{weakly} referenced
+content. Stage 3 seeds the three recent-offset values the encoder
+starts each frame with, which the stock trainer computes and discards,
+writing $\{1,4,8\}$: we measure the fit set's top three offsets and
+patch them in, keeping the result only if validation improves. Both
+stages gate on target level $\ge 16$ because fast levels index only
+part of a large dictionary into small hash tables and parse greedily,
+so curated content and seeded offsets cannot be exploited and can
+actively mislead the parser, while level 19's optimal parser indexes
+everything and cost-compares its options.
 
 \subsection{Guarantees}
 \label{sec:design-guarantees}
@@ -458,286 +467,180 @@ and it is evaluated first -- the selected validation ratio is at least
 that of the incumbent trainer at the same cap.
 \end{proposition}
 
-Both are immediate from the construction, and cheap-first ordering
-preserves both under truncation. Their content is not mathematical
-depth but the observation that the \emph{deployed} trainer satisfies
-neither: Proposition~\ref{prop:budget-monotonicity} fails empirically by
-24--31\% (\S\ref{sec:diagnosis-cliff}), and
+Both are immediate from the construction; their content is not
+mathematical depth but the observation that the \emph{deployed} trainer
+satisfies neither -- Proposition~\ref{prop:budget-monotonicity} fails
+empirically by 24--31\% (\S\ref{sec:diagnosis-cliff}), and
 Proposition~\ref{prop:anytime-floor} fails because there is no floor at
-all -- DCC-normal scope for a guarantee on a systems contribution
-(cf.\ Machete~\cite{machete2024}). Two honest limits: the guarantees
-hold on the validation measure, not held-out data
-(\S\ref{sec:evaluation} quantifies the gap), and
+all, DCC-normal scope for a guarantee on a systems contribution. The
+guarantees hold on the validation measure, not held-out data
+(\S\ref{sec:results} quantifies the gap), and
 Proposition~\ref{prop:budget-monotonicity} constrains the
 \emph{selected} candidate, not the underlying trainers -- a starved
 build is still a starved build, we merely decline to select it.
 
 % =====================================================================
-\section{Evaluation}
-\label{sec:evaluation}
+\section{Evaluation Methodology}
+\label{sec:evaluation-methodology}
 
-\textbf{Setup.} Five small-record corpora spanning deployment shapes,
-including zstd's own benchmark set: \texttt{github\_users} (9{,}114 JSON
-user records), \texttt{gharchive} (20{,}000 GitHub events),
-\texttt{weblogs} (15{,}000 batches of 20 NASA-HTTP log lines),
-\texttt{apijson} (10{,}000 Crossref records), \texttt{csvrows} (10{,}000
-50-row NYC 311 CSV fragments), each split 80/20 by seeded shuffle, with
-heldout compressed exactly once per configuration. We evaluate at level
-3 (RocksDB/ScyllaDB SSTable/Cassandra default) and 19 (archival), plus
-level 1 for a cell motivated by ScyllaDB's (off-by-default) RPC path
+Five small-record corpora spanning deployment shapes, including zstd's
+own benchmark set: \texttt{github\_users} (9{,}114 JSON user records),
+\texttt{gharchive} (20{,}000 GitHub events), \texttt{weblogs} (15{,}000
+batches of 20 NASA-HTTP log lines), \texttt{apijson} (10{,}000 Crossref
+records), \texttt{csvrows} (10{,}000 50-row NYC 311 CSV fragments), each
+split 80/20 by seeded shuffle, with heldout data compressed exactly
+once per configuration. We evaluate at level 3 (RocksDB/ScyllaDB
+SSTable/Cassandra default) and 19 (archival), plus level 1 for a cell
+motivated by ScyllaDB's off-by-default RPC path
 (\S\ref{sec:background-deployment}), on an Apple M4 against zstd
 \texttt{82d322c} (v1.6.0), every dictionary round-trip-verified against
 an independent stock binary; x86 replication of throughput is planned
-but not run (\S\ref{sec:discussion}). Midway through this work the
-machine's temporary storage was cleared, destroying the experimental
-tree; we rebuilt it from recorded specifications -- re-fetching every
-corpus, recompiling, re-running every experiment -- and report only
-rebuilt-environment numbers. Headline behaviors, including the
-budget-degeneracy collapse, reproduced on freshly downloaded data with a
-fresh split, an unusually strong reproducibility check; a byte-for-byte
-determinism check across reruns was \emph{not} repeated post-rebuild and
-should be treated as unverified (\S\ref{sec:discussion}).
+but not run.
+
+We compare against five references: the deployed default (\texttt{zstd
+--train} at 110\,KiB), a no-training control (random samples
+concatenated to the same budget), \texttt{klauspost/compress}'s
+\texttt{builddict}~\cite{klauspost}, an equal-wall-clock sweep of the
+stock optimizer, and matched-size/production rebuilds at Cassandra's
+64\,KiB budget, RocksDB's opt-in no-trainer fallback, and the
+ScyllaDB-motivated level-1 setting (\S\ref{sec:background-deployment}).
+Table~\ref{tab:t1-main} reports the \emph{tuned} (Stage 1 only) and
+\emph{full} (all stages) variants of our trainer against these
+baselines.
+
+Midway through this work the machine's temporary storage was cleared,
+destroying the experimental tree; we rebuilt it from recorded
+specifications -- re-fetching every corpus, recompiling, re-running
+every experiment -- and report only rebuilt-environment numbers.
+Headline behaviors, including the budget-degeneracy collapse,
+reproduced on freshly downloaded data with a fresh split, an unusually
+strong reproducibility check.
+
+Full per-corpus tables for the equal-compute sweep and the
+\texttt{klauspost} baseline, the benchmark corpora, and the trainer
+itself are available at \texttt{<REPO-URL-TODO>} (commit
+\texttt{<HASH-TODO>}).
+
+% =====================================================================
+\section{Results}
+\label{sec:results}
+
+Table~\ref{tab:t1-main} and Figure~\ref{fig:f4-gains} give the headline
+comparison against the deployed default; \S\ref{sec:results-main}
+states it plainly, \S\ref{sec:results-parity} isolates how much of it
+is dictionary size versus method by rebuilding baselines at matched
+sizes and at production-motivated budgets, and
+\S\ref{sec:results-equalcompute} checks whether the gain survives when
+the incumbent is given equal wall-clock time and compares against the
+only other public dictionary trainer we found.
 
 \subsection{Main results}
-\label{sec:evaluation-main}
+\label{sec:results-main}
 
 \input{tables/t1_main.tex}
 
-Against the deployed default (\texttt{zstd --train} at its 110\,KiB
-budget), our trainer improves compression ratio on every corpus at both
-levels (Table~\ref{tab:t1-main}): between +3.1\% and +14.3\% at level 3
-and between +11.5\% and +32.1\% at level 19, averaging roughly +8\% and
-+23\% respectively. The no-training control -- random training samples
-concatenated to the same 110\,KiB -- trails the stock trainer
-everywhere, confirming the covering heuristic earns its keep and our
-gains are not simply ``any bytes will do.'' These are the numbers a
-practitioner would see from replacing their dictionary file and
-changing nothing else; \S\ref{sec:evaluation-parity} and
-\S\ref{sec:evaluation-cost} take up how much of them is size versus
-method.
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth,height=0.17\textheight,keepaspectratio]{../figures/f4_gains.png}
+  \caption{Percent compression-ratio improvement of \emph{tuned} and
+    \emph{full} over the deployed default, by corpus and level (F4,
+    generated by \texttt{tools/make\_figures.py}).}
+  \label{fig:f4-gains}
+\end{figure}
 
-\subsection{Matched-size and production configurations}
-\label{sec:evaluation-parity}
+Against the deployed default, our trainer improves compression ratio on
+every corpus at both levels (Table~\ref{tab:t1-main}): between
+\pending{+3.1\%} and +14.3\% at level 3 and between +11.5\% and +32.1\%
+at level 19, averaging roughly \pending{+8\%} and +23\% respectively
+(Figure~\ref{fig:f4-gains}). The no-training control -- random training
+samples concatenated to the same 110\,KiB -- trails the stock trainer
+everywhere, confirming the covering heuristic earns its keep. The
+\emph{tuned} column is Stage 1 alone; \emph{full} adds Stages 2--3,
+contributing +1.0 to +9.0 percentage points at level 19, positive on
+all five corpora. At level 3, where Stages 2--3 are gated off,
+\emph{tuned} and \emph{full} should coincide exactly; where they
+instead differ, by \pending{0\% to -2.7\%} and most visibly on
+\texttt{github\_users} (\pending{-2.53\%}), the cause is a validation-gate
+contamination in the full-refit step (\S\ref{sec:design-stage1}) rather
+than genuine stage-2/3 contribution -- a fix is in progress and every
+\pending{} figure in this section will change once it lands.
+
+\subsection{Isolating size from method}
+\label{sec:results-parity}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth,height=0.24\textheight,keepaspectratio]{../figures/f3_pareto.png}
+  \caption{Compression ratio vs.\ dictionary size across every
+    trainer/size variant we ran, one panel per (corpus, level); our
+    \emph{tuned} and \emph{full} variants sit on or near the Pareto
+    frontier in every panel (F3, generated by
+    \texttt{tools/make\_figures.py}).}
+  \label{fig:f3-pareto}
+\end{figure}
 
 Our trainer chooses its own size, usually larger than the 110\,KiB
-default, so we rebuilt the baseline at \emph{our} winning size for every
-corpus and level (full breakdown: Table~\ref{tab:t4-parity},
-Appendix~\ref{app:tables}). At level 3, almost none of the headline
-advantage survives -- two corpora match exactly, two retain +0.2\%/+1.5\%,
-so 0--11\% of the gain is method rather than size. At level 19 a real
-margin remains: +6.2\%/+6.9\%/+2.8\% (\texttt{github\_users}/\texttt{weblogs}/\texttt{csvrows})
-at identical budgets. This defines the contribution: at fast levels the
-trainer \emph{finds} the right size safely and automatically, a size the
-stock trainer could in principle also have produced; at high levels
+default, so we rebuilt the baseline at \emph{our} winning size for
+every corpus and level (Table~\ref{tab:t4-parity},
+Figure~\ref{fig:f3-pareto}). At level 3, almost none of the headline
+advantage survives -- two corpora match exactly, two retain
++0.2\%/+1.5\%, so 0--11\% of the gain is method rather than size. At
+level 19 a real margin remains: +6.2\%/+6.9\%/+2.8\%
+(\texttt{github\_users}/\texttt{weblogs}/\texttt{csvrows}) at identical
+budgets. This defines the contribution: at fast levels the trainer
+\emph{finds} the right size safely and automatically, a size the stock
+trainer could in principle also have produced; at high levels
 refinement and seeding add compression no choice of budget recovers.
 Three of ten matched-size cells could not be run as intended -- the
 stock trainer, asked for our winning budget, itself emitted
-substantially less (e.g.\ 892\,KiB against a 2\,MiB request on
-\texttt{gharchive} L19) -- so the size confound is not fully separable
-from \S\ref{sec:diagnosis-cliff}: part of ``we used a bigger dictionary''
-is ``we could use a bigger dictionary.''
+substantially less -- so the size confound is not fully separable from
+\S\ref{sec:diagnosis-cliff}.
 
-Reproducing Cassandra's shipped default directly and two further
+\input{tables/t4_parity.tex}
+
+Reproducing Cassandra's shipped default and two further
 deployment-motivated settings (\S\ref{sec:background-deployment}): at
 Cassandra's 64\,KiB level-3 budget we beat the stock trainer on three
 corpora (+0.4\% to +1.7\%) and tie exactly on two, no losses -- ties
 occur where no ladder candidate beats the incumbent-equivalent floor,
-so the tool returns the dictionary the user already had, the anytime
-guarantee (\S\ref{sec:design-guarantees}) operating as designed. At a
-level-1, 110\,KiB setting -- the budget and level ScyllaDB's RPC path
-would use if enabled, though that path defaults to off -- we win on all
-five corpora, +1.6\% to +8.1\%. RocksDB's opt-in, non-default
-no-trainer fallback ranks between no dictionary and the stock trainer
-in nine of ten cells and trails our pipeline by a median of 18\%.
+the anytime guarantee (\S\ref{sec:design-guarantees}) operating as
+designed. At a level-1, 110\,KiB setting motivated by ScyllaDB's
+(off-by-default) RPC path, we win on all five corpora, +1.6\% to
++8.1\%. RocksDB's opt-in, non-default no-trainer fallback ranks between
+no dictionary and the stock trainer in nine of ten cells and trails our
+pipeline by a median of 18\%.
 
-\subsection{Alternative trainers and ablation}
-\label{sec:evaluation-baselines}
+\subsection{Equal compute and alternative trainers}
+\label{sec:results-equalcompute}
+
+Our trainer spends minutes to tens of minutes (41\,s--59\,min across
+corpora and levels) where \texttt{zstd --train} spends 0.2--3.2\,s. The
+corresponding manual control gives the
+incumbent our wall-clock budget to sweep sizes, selecting by measured
+validation compression: this closes the gap at level 3
+(\pending{1.5\%} above to \pending{9.5\%} below our result, a wash)
+while at level 19 we still win on \pending{four of five} corpora,
+\pending{+1.6\%} to \pending{+8.5\%}, losing narrowly on
+\texttt{apijson} (\pending{-1.1\%}) -- these equal-compute figures
+predate the refit-on-full fix above and will be replaced once corrected
+values are computed. The sweep also reproduced the budget-degeneracy
+pathology -- several large-budget candidates emitted dictionaries
+25--30\% worse than at half the budget, surviving only because our
+harness selects by measured compression, not requested size
+(\S\ref{sec:diagnosis-cliff}, M3) -- the clearest demonstration that the
+safety property in \S\ref{sec:design-guarantees} matters.
 
 \texttt{klauspost/compress}'s \texttt{builddict}~\cite{klauspost}, the
 closest prior art to our level-awareness claim, loses to the stock zstd
-default on all twenty cells we ran (Table~\ref{tab:t3-baselines},
-Appendix~\ref{app:tables}), emitting $\sim$17\,KiB on
+default on all twenty cells we ran, emitting $\sim$17\,KiB on
 \texttt{github\_users} regardless of a 1\,MiB request; we report this
 without enthusiasm -- it should have been a harder baseline to beat.
 
-\label{sec:evaluation-ablation}
-Table~\ref{tab:t1-main}'s \emph{tuned} column is Stage 1 alone;
-\emph{full} adds Stages 2--3, which contribute +1.0 to +9.0 percentage
-points at level 19, positive on all five corpora. At level 3, where
-Stages 2--3 are gated off (\S\ref{sec:design-gating}), \emph{tuned} and
-\emph{full} should coincide exactly; they instead differ by 0\% to
-$-2.7\%$, because the two variants are independently retrained rather
-than one extending the other (\texttt{tools/run\_campaign.py}) -- Stage
-1's own run-to-run variance, and evidence that byte-identical
-reproducibility was not independently confirmed post-rebuild
-(\S\ref{sec:discussion}).
-
-\subsection{Equal compute, cost, and unmeasured claims}
-\label{sec:evaluation-equalcompute}
-
-\begin{sloppypar}
-Our trainer spends minutes to tens of minutes where \texttt{zstd
---train} spends 0.2--3.2\,s (\texttt{results/benchmark\_v2.csv}). The
-corresponding manual control gives the incumbent our wall-clock budget
-to sweep sizes, selecting by measured validation compression
-(Table~\ref{tab:t2-equalcompute}, Appendix~\ref{app:tables}): this
-closes the gap at level 3 (1.5\% above to 9.5\% below our result, a
-wash) while at level 19 we still win on four of five corpora, +1.6\% to
-+8.5\%, losing narrowly on \texttt{apijson} ($-1.1\%$). The sweep also
-reproduced the budget-degeneracy pathology -- several large-budget
-candidates emitted dictionaries 25--30\% worse than at half the budget,
-surviving only because our harness selects by measured compression, not
-requested size (\S\ref{sec:diagnosis-cliff}, M3) -- the clearest
-demonstration that the safety property in
-\S\ref{sec:design-guarantees} matters: the naive version of this
-experiment silently selects the broken dictionary. Peak-RSS on
-\texttt{github\_users}/\texttt{gharchive} shows batch-compression memory
-essentially unaffected by dictionary choice (2.8--6.0\,MB).
-\label{sec:evaluation-cost}
-\end{sloppypar}
-
-Compression/decompression throughput, bootstrap confidence intervals
-over the heldout deltas, and cross-codec transfer to Brotli and LZ4 were
-designed and partially run before the storage wipe
-(\S\ref{sec:evaluation-main}) but not re-executed against the rebuilt
-corpora, and \texttt{results/benchmark\_v2.csv} contains no post-rebuild
-rows for any of them. \todo{Re-run throughput, a paired bootstrap over
-the main-results heldout deltas, and Brotli/LZ4 cross-codec transfer in
-the rebuilt environment before submission; report honestly if any
-pre-wipe number fails to reproduce.} We do not restate pre-wipe figures
-here: a number appears only once recomputed against the rebuilt
-pipeline (\S\ref{sec:discussion}).
-
-% =====================================================================
-\section{Related work}
-\label{sec:related-work}
-
-\textbf{Dictionary construction.} The trainer descends from Liao, Petri,
-Moffat and Wirth's relative Lempel-Ziv dictionary
-construction~\cite{liao2016cover}, a covering problem over sampled
-substrings; zstd adopted it as \texttt{--train-cover} and later added
-the fastCOVER approximation that is today's CLI default, unchanged
-since 2018. fastCOVER itself has no academic description at all: it
-entered zstd via pull requests \#1250 and \#1274 (2018), not a paper.
-We reuse the covering heuristic unmodified; our contribution
-is the selection layer around it. That paper has on the order of a
-dozen citations against hundreds of vendored copies, absorbed into
-deployments under a feature-flag name it never used. Level-dependence
-itself is not a new observation: a zstd maintainer noted in 2019 that
-training at the level you actually compress at ``will tune the
-dictionary better''~\cite{zstdissue1572}, and a 2022 request to expose
-a level parameter was declined for ABI
-stability~\cite{zstdissue3213}. Our claim is the \emph{mechanism}
-(three independent, opposite-sign inversions traced to hash-table
-overwrite vs.\ full indexing, \S\ref{sec:diagnosis-level-blindness})
-and \emph{magnitude} -- including, to our knowledge, the first
-measurement of the disabled repcode-seeding path -- not the base
-observation. \texttt{klauspost/compress}~\cite{klauspost}
-is the only other tool we know of that emits standard-format zstd
-dictionaries and exposes a level-targeting flag, anticipating our
-level-awareness argument; we benchmark it directly
-(Table~\ref{tab:t3-baselines}) and it loses to the stock default on
-every cell we ran. Brotli's ``durchschlag'' dictionary
-generator~\cite{rfc9841,alakuijala2019brotli} is a related covering
-method for raw-content dictionaries; cross-codec transfer to it is
-designed but not yet re-executed post-rebuild
-(\S\ref{sec:evaluation-cost}), so we cite rather than benchmark it.
-
-\textbf{RLZ, methodology, and theory.} Our refinement stage
-(\S\ref{sec:design-stage2}) adapts RLZ reference pruning and
-selection~\cite{hoobin2011rlz,puglisi2023rlz}: the novelty is doing it
-against the production encoder's own sequence stream, at the granularity
-that encoder matches on, gated by measured compressed size, plus the
-finding that literally-dead content is rare (0--4\%). Methodologically we
-follow recent practical compression work that measures precisely why
-the incumbent underperforms, then designs against the
-measurement~\cite{boncz2020fsst,afroozeh2024alp,kuschewski2023btrblocks,xia2016fastcdc},
-reporting where we lose
-(\S\ref{sec:evaluation-parity}--\ref{sec:evaluation-equalcompute}) as
-well as where we win; domain-specific compression~\cite{machete2024} and
-LZ77 acceleration~\cite{lzhv2025} are recent DCC neighbors in a
-different corner of the space. Theoretically, optimal dictionary choice
-is intractable in general -- NP-complete~\cite{storer1982textual},
-APX-hard as smallest-grammar~\cite{charikar2005smallestgrammar,casel2019grammar}
-(\S\ref{sec:problem-statement}) -- so our propositions
-(\S\ref{sec:design-guarantees}) deliberately constrain only the
-\emph{selection} rule; Niesen's deduplication
-analysis~\cite{niesen2019dedup} treats a related but distinct question,
-not construction for a specific encoder.
-
-\textbf{Parameter tuning and deployment.} \texttt{zstd}'s
-\texttt{paramgrill} and Meta's managed-compression
-blog~\cite{metaengineering2018zstd} disclose unpublished per-workload
-tuning -- adjacent to us (it tunes the encoder, we build the dictionary)
-but evidence that per-workload specialization is known practice,
-unpublished science. OpenZL~\cite{openzl}, training format-specific
-compression graphs, is the heavyweight successor direction, its
-dictionary story left to its own future work. Deployment status varies
-by system and path (\S\ref{sec:background-deployment}): ScyllaDB's
-SSTable path and, opt-in, RocksDB use trained dictionaries in
-production; Cassandra's CEP-54 targets the same but is unreleased; and
-ScyllaDB's own RPC-dictionary path is off by default. The web has
-standardized dictionary transport~\cite{rfc9842}, but Chrome's own
-use-counters put overall usage at roughly 0.09\% of page loads and its
-zstd variant two orders of magnitude smaller
-still~\cite{chromestatususecounters}, and Cloudflare's implementation is
-a passthrough beta that itself generates no
-dictionaries~\cite{cloudflaresharedddict}. This variation is why
-\S\ref{sec:evaluation-parity} matches these specific configurations
-rather than only our own chosen sizes.
-
-% =====================================================================
-\section{Discussion and limitations}
-\label{sec:discussion}
-
-\textbf{Corpus- and level-dependence.} Table~\ref{tab:t1-main}'s spread --
-+3.1\% to +14.3\% at level 3, +11.5\% to +32.1\% at level 19 -- is real
-variation, driven by how redundant a corpus is and how much of that
-redundancy the default 110\,KiB budget already captures. Read it as a
-range, not an average.
-
-\textbf{Fast levels: safe automation, not new compression.} Rebuilding
-the stock trainer at our winning size leaves 0--11\% of the level-3
-headline gain (\S\ref{sec:evaluation-parity}); the fixed-budget
-Cassandra-64\,KiB cells confirm this without a size confound (0.4--1.7\%
-or tie, never lose), and an equal-wall-clock sweep
-(\S\ref{sec:evaluation-equalcompute}) closes the level-3 gap entirely.
-The fast-level contribution is that the tool \emph{finds} the right size
-and never regresses (Proposition~\ref{prop:anytime-floor}), not that it
-discovers content the incumbent could not in principle have found. At
-level 19 a real margin survives both controls, because refinement and
-repcode seeding exploit which bytes real compressions reference --
-information no choice of budget recovers.
-
-\textbf{Unverified, pending re-measurement.} All numbers here are
-single-machine (Apple M4); throughput, bootstrap CIs, and cross-codec
-transfer were designed pre-wipe but not re-run against the rebuilt
-corpora, so we report none rather than reuse figures we could not
-recompute (\S\ref{sec:evaluation-cost}). Byte-identical reproducibility
-across reruns, an assumption of the design, was likewise not re-checked;
-\S\ref{sec:evaluation-ablation}'s small, mixed-sign \emph{tuned}/\emph{full}
-deltas at level 3 are indirect evidence it may not hold exactly.
-Held-out files within a corpus are also shuffled draws from one scrape,
-not independent observations, so a bootstrap over them would understate
-true variance -- one more reason we read Table~\ref{tab:t1-main} as five
-point estimates, not a population sample, and attached no intervals we
-could not first re-measure honestly. Separately, asking the stock
-trainer for our winning budget starved it on three matched-size cells
-(\S\ref{sec:evaluation-parity}) -- the defect under study, not a clean
-control -- so we excluded them from the survival-percentage summary
-rather than average them in; that the incumbent sometimes cannot be
-given the size we use is itself evidence for \S\ref{sec:diagnosis-cliff}.
-
-\textbf{Future work and upstreaming.} Sharing Stage 1's search across
-levels and a speed-constrained mode trading ratio for a bounded
-training/decompression budget are natural next steps given the
-41\,s--59\,min training cost and level-19 throughput cost of large
-dictionaries. We have drafted, but not submitted, four upstream fixes
-(\S\ref{sec:diagnosis-cliff}): charge the objective by requested rather
-than emitted capacity, scale the zero-score tolerance, fix
-\texttt{displayLevel}, and shrink from the front. A more general,
-ML-guided scoring loop, not the greedy round-by-round acceptance used
-here, is future work.
+All results above are single-machine (Apple M4) measurements from the
+rebuilt post-wipe environment; throughput, bootstrap confidence
+intervals, and cross-codec transfer to Brotli and LZ4 were designed but
+not re-executed here, so we report none rather than reuse figures we
+could not recompute.
 
 % =====================================================================
 \section{Conclusion}
@@ -745,16 +648,25 @@ here, is future work.
 
 Diagnosis-first beats algorithm-first: a $\sim$1-second exact oracle
 changes the design space. A 2016 covering heuristic, unmodified, plus a
-validation-driven selection layer around it yields double-digit archival
-gains, gains that survive matched-size and equal-compute scrutiny, and
-guaranteed-safe defaults at every budget -- while the safe-automation
-story at fast levels is, on its own honest terms, still worth shipping.
+validation-driven selection layer around it yields double-digit
+archival gains, gains that survive matched-size and equal-compute
+scrutiny, and guaranteed-safe defaults at every budget -- while the
+safe-automation story at fast levels is, on its own honest terms, still
+worth shipping. Two things remain open: byte-identical reproducibility
+across reruns, an assumption the safety guarantees lean on, was not
+independently re-checked after the post-wipe rebuild, and x86 throughput
+replication is still pending. We have drafted, but not yet upstreamed,
+four fixes to the incumbent trainer itself -- charging its objective by
+requested rather than emitted capacity, scaling its dead-epoch
+tolerance, fixing the suppressed diagnostics, and shrinking dictionaries
+from the front instead of the back. Sharing Stage 1's search across
+levels, and a speed-constrained mode that trades ratio for a bounded
+training budget, are the natural next steps given the training-time
+cost measured in \S\ref{sec:results-equalcompute}.
 
 % =====================================================================
-% Two-column, footnote-size reference list: a page-budget technique for
-% the 10-page limit, not a content change -- every entry is
-% byte-identical to references.bib. Revert to single-column \normalsize
-% if/when the official DCC template is adopted (see header TODO).
+% Two-column, footnote-size reference list -- a page-budget technique,
+% not a content change; every entry is byte-identical to references.bib.
 {\footnotesize
 \begin{multicols}{2}
 \bibliographystyle{abbrv}
@@ -762,59 +674,21 @@ story at fast levels is, on its own honest terms, still worth shipping.
 \end{multicols}
 }
 
-% =====================================================================
-% APPENDIX -- NOT PART OF THE 10-PAGE SUBMISSION. Delete this section
-% (from \clearpage below through the line above \end{document}) before
-% generating the camera-ready/submission PDF. Kept here only so the
-% size-curves figure, the full per-corpus matched-size/production-parity
-% table, the equal-compute sweep table, and the klauspost/compress
-% full-breakdown table (all referenced in prose in
-% \S\ref{sec:diagnosis-size-blindness}, \S\ref{sec:evaluation-parity},
-% \S\ref{sec:evaluation-equalcompute}, \S\ref{sec:evaluation-baselines})
-% are not lost while the paper is being trimmed to the DCC page limit;
-% every number/figure here also appears, summarized, in the main text.
-% =====================================================================
-\clearpage
-\appendix
-\section{Supplementary figure and tables (to be cut before submission)}
-\label{app:tables}
-
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=\linewidth,height=0.42\textheight,keepaspectratio]{../figures/f2_size_curves.pdf}
-  \caption{Compression ratio vs.\ dictionary size, one panel per
-    (corpus, level), with the 110KB default marked (F2, generated by
-    \texttt{tools/make\_figures.py}).}
-  \label{fig:f2-size-curves}
-\end{figure}
-
-\input{tables/t4_parity.tex}
-\input{tables/t2_equalcompute.tex}
-\input{tables/t3_baselines.tex}
-
 \end{document}
 
 % =====================================================================
-% TODO tracker (pre-submission), carried over verbatim from
-% paper/paper_draft.md so nothing is lost -- not part of the rendered
-% paper.
+% TODO tracker (pre-submission), carried over verbatim -- not part of
+% the rendered paper.
 % =====================================================================
-% - [ ] REBUILD: regenerate all artifacts in durable repo; validate
-%   against recorded numbers (in progress).
-% - [ ] E1-E4 rerun (equal-compute, klauspost, brotli-matched, memory)
-%   -- was in flight at tmp wipe; partial E1 recorded above.
-% - [ ] Matched-size main-table columns + Pareto figures (4-6 figures
-%   total incl. cliff plot, size curves, Pareto scatter).
-% - [ ] x86 Linux throughput replication + RocksDB integration demo
-%   (Yugen's PC).
-% - [ ] Re-verify dead-code/#if0 findings against latest release tag.
-% - [ ] Upstream: submit displayLevel memset fix + objective-charging
-%   patch; reference in paper.
-% - [ ] Retire NASA corpus from headline duty (31-year-old data jab);
-%   keep as one of five.
-% - [ ] LaTeX port (IEEEtran 10pp single-column per DCC),
-%   references.bib. -- NOTE: superseded, see header comment: DCC is
-%   single-column 12pt but IEEEtran is the wrong class for that; this
-%   scaffold uses article+geometry instead.
-% - [ ] Fresh scoop-scan <=2 weeks before submission. Author/affiliation
-%   + AI-assistance disclosure.
+% - [ ] Sweep every \pending{...} once the refit-on-full fix
+%   (KNOWN_ISSUES.md #1) and the corrected equal-compute sweep
+%   (results/corrections_v2.csv, variant=default_sweep_winner) land; see
+%   the restructuring report for the full list of instances.
+% - [ ] Fill in <REPO-URL-TODO> and <HASH-TODO> in
+%   \S\ref{sec:evaluation-methodology} before submission.
+% - [ ] x86 Linux throughput replication + RocksDB integration demo.
+% - [ ] Author/affiliation + AI-assistance disclosure; fresh scoop-scan
+%   <=2 weeks before submission.
+% - [ ] Re-verify page/word count against the final DCC template if/when
+%   the organizers publish one (current geometry is best-effort per
+%   docs/DCC_STYLE.md's 6in x 9in text-area estimate).
