@@ -1,0 +1,10 @@
+experiment,corpus,level,variant,dict_size,ratio,train_wall_s,note
+REFIT_FIX,github_users,3,optA_tuned,1048576,10.202290,101.910,trainer.py --stages 1 --refit-mode optA --threads 5 --time-budget-s 600
+REFIT_FIX,github_users,3,optA_full,1048576,10.202290,83.802,trainer.py --stages all --refit-mode optA --threads 5 --time-budget-s 600
+REFIT_FIX,github_users,3,optB_tuned,1048576,9.944199,108.181,trainer.py --stages 1 --refit-mode optB --threads 5 --time-budget-s 600
+REFIT_FIX,github_users,3,optB_full,1048576,9.944199,102.071,trainer.py --stages all --refit-mode optB --threads 5 --time-budget-s 600
+REFIT_FIX,github_users,3,optC_tuned,8192,10.031801,63.294,trainer.py --stages 1 --refit-mode optC --threads 5 --time-budget-s 600
+REFIT_FIX,github_users,3,optC_full,393216,10.101086,80.287,trainer.py --stages all --refit-mode optC --threads 5 --time-budget-s 600
+REFIT_FIX,github_users,19,optA_tuned,1048576,10.689767,97.743,trainer.py --stages 1 --refit-mode optA --threads 5 --time-budget-s 1800
+REFIT_FIX,github_users,19,optA_full,1048575,11.081317,2030.549,trainer.py --stages all --refit-mode optA --threads 5 --time-budget-s 1800
+REFIT_FIX,github_users,19,optB_tuned,1048576,10.550433,103.871,trainer.py --stages 1 --refit-mode optB --threads 5 --time-budget-s 1800

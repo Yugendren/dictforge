@@ -92,7 +92,8 @@ def run(cmd, timeout=None):
         return False, None, "", "timeout"
 
 
-def train_dict(zstd_bin, trainer, train_src_dir, size, out_path, timeout=None):
+def train_dict(zstd_bin, trainer, train_src_dir, size, out_path, timeout=None,
+                threads=TRAIN_THREADS):
     """trainer in {'fastcover', 'cover'}. Returns (ok, stderr_tail)."""
     if trainer == "fastcover":
         train_flag = "--train"
@@ -101,7 +102,7 @@ def train_dict(zstd_bin, trainer, train_src_dir, size, out_path, timeout=None):
     else:
         raise ValueError(trainer)
     cmd = [str(zstd_bin), train_flag, "-f", "-r", str(train_src_dir),
-           f"--maxdict={size}", f"-T{TRAIN_THREADS}", "-o", str(out_path)]
+           f"--maxdict={size}", f"-T{threads}", "-o", str(out_path)]
     ok, rc, out, err = run(cmd, timeout=timeout)
     if not ok or not os.path.exists(out_path):
         return False, (err or out)[-500:]
@@ -155,6 +156,24 @@ def main():
     ap.add_argument("--seed", type=int, default=1729)
     ap.add_argument("--stages", choices=["all", "1"], default="all")
     ap.add_argument("--zstd-bin", default=str(DEFAULT_ZSTD_BIN))
+    ap.add_argument("--threads", type=int, default=TRAIN_THREADS,
+                     help="zstd -T value for training subprocesses (default: "
+                          f"{TRAIN_THREADS}). Does not affect batch-compress "
+                          "measurement, which is always single-threaded.")
+    ap.add_argument("--refit-mode", choices=["contaminated", "optA", "optB", "optC"],
+                     default="contaminated",
+                     help="See KNOWN_ISSUES.md #1. 'contaminated' (default) is the "
+                          "original, unfixed behavior: refit-on-full retrains the "
+                          "stage-1 winner on fit+val and is gated on val, which is "
+                          "part of its own training data -- kept as the default so "
+                          "existing callers/scripts are byte-for-byte unaffected. "
+                          "'optA' drops refit entirely (stage-1 winner, trained on "
+                          "fit only, is final). 'optB' trains stage-1 candidates on "
+                          "the full train-dir from the start and uses val only for "
+                          "selection (refit is then a no-op and is skipped). 'optC' "
+                          "keeps refit but carves train-dir 70/15/15 fit/val/gate "
+                          "and gates refit's accept/reject on the untouched gate "
+                          "split instead of val.")
     args = ap.parse_args()
 
     if not REFINE_DICT_BIN.exists() or not OFFSET_HIST_BIN.exists():
@@ -189,19 +208,39 @@ def main():
         _run_trainer(args, zstd_bin, train_dir, out_path, meta_path, workdir,
                       meta, remaining, exhausted, t_start)
     finally:
-        shutil.rmtree(workdir, ignore_errors=True)
+        if os.environ.get("DICTFORGE_KEEP_WORKDIR"):
+            log(f"DICTFORGE_KEEP_WORKDIR set: leaving workdir at {workdir}")
+        else:
+            shutil.rmtree(workdir, ignore_errors=True)
 
 
 def _run_trainer(args, zstd_bin, train_dir, out_path, meta_path, workdir,
                   meta, remaining, exhausted, t_start):
     # -------------------------------------------------------------
-    # 0. fit/val split
+    # 0. fit/val(/gate) split
+    #
+    # refit_mode == "optC" carves off a third, untouched "gate" split
+    # (70/15/15 fit/val/gate) reserved purely for judging refit-on-full's
+    # accept/reject decision, so that decision never sees data the refit
+    # candidate itself trained on. Every other mode keeps the original
+    # 85/15 fit/val split (byte-for-byte the same shuffle prefix as
+    # "optC"'s fit+val, since both use the same seeded shuffle order).
     # -------------------------------------------------------------
     names = list_files(train_dir)
     rng = random.Random(args.seed)
     rng.shuffle(names)
-    n_fit = round(len(names) * 0.85)
-    fit_names, val_names = names[:n_fit], names[n_fit:]
+
+    gate_dir = None
+    gate_names = []
+    if args.refit_mode == "optC":
+        n_fit = round(len(names) * 0.70)
+        n_val = round(len(names) * 0.15)
+        fit_names = names[:n_fit]
+        val_names = names[n_fit:n_fit + n_val]
+        gate_names = names[n_fit + n_val:]
+    else:
+        n_fit = round(len(names) * 0.85)
+        fit_names, val_names = names[:n_fit], names[n_fit:]
 
     fit_dir = workdir / "fit"
     val_dir = workdir / "val"
@@ -212,15 +251,39 @@ def _run_trainer(args, zstd_bin, train_dir, out_path, meta_path, workdir,
     for n in val_names:
         os.symlink(train_dir / n, val_dir / n)
 
+    fitval_dir = None
+    if args.refit_mode == "optC":
+        gate_dir = workdir / "gate"
+        gate_dir.mkdir()
+        for n in gate_names:
+            os.symlink(train_dir / n, gate_dir / n)
+        # fit UNION val ("full train-dir minus the untouched gate split"):
+        # this is what optC's refit step trains on, so the gate split
+        # never appears in any refit candidate's training data.
+        fitval_dir = workdir / "fitval"
+        fitval_dir.mkdir()
+        for n in fit_names + val_names:
+            os.symlink(train_dir / n, fitval_dir / n)
+
     fit_bytes = dir_raw_bytes(fit_dir)
     val_bytes = dir_raw_bytes(val_dir)
+    gate_bytes = dir_raw_bytes(gate_dir) if gate_dir is not None else None
     log(f"split: {len(names)} files -> {len(fit_names)} fit ({fit_bytes} bytes) / "
-        f"{len(val_names)} val ({val_bytes} bytes)")
+        f"{len(val_names)} val ({val_bytes} bytes)"
+        + (f" / {len(gate_names)} gate ({gate_bytes} bytes)" if gate_dir is not None else ""))
 
     meta["split"] = {
         "total_files": len(names), "fit_files": len(fit_names),
         "val_files": len(val_names), "fit_bytes": fit_bytes, "val_bytes": val_bytes,
+        "gate_files": len(gate_names) if gate_dir is not None else None,
+        "gate_bytes": gate_bytes,
+        "refit_mode": args.refit_mode,
     }
+
+    # stage-1 training source: optB trains every candidate directly on the
+    # full train-dir (fit+val) and uses val purely for selection, never for
+    # training any candidate. Every other mode trains on fit only.
+    stage1_train_dir = train_dir if args.refit_mode == "optB" else fit_dir
 
     # -------------------------------------------------------------
     # 1. stage 1: size-ladder sweep
@@ -260,8 +323,8 @@ def _run_trainer(args, zstd_bin, train_dir, out_path, meta_path, workdir,
 
         t0 = time.monotonic()
         timeout = None if unconditional else max(5, remaining())
-        ok, err_tail = train_dict(zstd_bin, trainer, fit_dir, size, candidate_path,
-                                   timeout=timeout)
+        ok, err_tail = train_dict(zstd_bin, trainer, stage1_train_dir, size, candidate_path,
+                                   timeout=timeout, threads=args.threads)
         rec["train_time_s"] = time.monotonic() - t0
 
         if not ok:
@@ -303,6 +366,7 @@ def _run_trainer(args, zstd_bin, train_dir, out_path, meta_path, workdir,
         "winner": best_meta,
         "winner_val_ratio": current_val_ratio,
         "time_exhausted": time_exhausted_flag,
+        "train_source": "train_dir(full)" if args.refit_mode == "optB" else "fit_dir",
     }
     log(f"stage1 winner: {best_meta} val_ratio={current_val_ratio:.6f}")
 
@@ -332,14 +396,28 @@ def _run_trainer(args, zstd_bin, train_dir, out_path, meta_path, workdir,
         meta["stage3"] = {"skipped": "target_level < 16"}
 
     # -------------------------------------------------------------
-    # 4. refit-on-full
+    # 4. refit-on-full (mode-dependent; see KNOWN_ISSUES.md #1)
     # -------------------------------------------------------------
-    if current_source == "stage1":
+    if current_source != "stage1":
+        meta["refit_on_full"] = {"skipped": f"final source is '{current_source}', not stage1"}
+    elif args.refit_mode == "optA":
+        meta["refit_on_full"] = {"skipped": "optA: refit disabled entirely"}
+    elif args.refit_mode == "optB":
+        meta["refit_on_full"] = {
+            "skipped": "optB: stage1 winner was already trained on the full "
+                       "train-dir (fit+val); nothing left to refit"}
+    elif args.refit_mode == "optC":
+        # train on fit UNION val (never on the untouched gate split);
+        # gate acceptance on that untouched gate split.
+        current_bytes, current_source, current_val_ratio = _refit_on_full(
+            args, zstd_bin, fitval_dir, gate_dir, workdir, meta, best_meta,
+            current_bytes, current_val_ratio, args.threads,
+            judge_split_name="gate")
+    else:  # "contaminated" -- original, unfixed behavior (default; unchanged)
         current_bytes, current_source, current_val_ratio = _refit_on_full(
             args, zstd_bin, train_dir, val_dir, workdir, meta, best_meta,
-            current_bytes, current_val_ratio)
-    else:
-        meta["refit_on_full"] = {"skipped": f"final source is '{current_source}', not stage1"}
+            current_bytes, current_val_ratio, args.threads,
+            judge_split_name="val")
 
     _finish(args, out_path, meta_path, meta, current_bytes, current_val_ratio,
             current_source, t_start)
@@ -610,40 +688,71 @@ def _stage3(args, zstd_bin, fit_dir, val_dir, workdir, meta, current_bytes,
 # refit-on-full
 # ---------------------------------------------------------------------
 
-def _refit_on_full(args, zstd_bin, train_dir, val_dir, workdir, meta, stage1_winner,
-                    current_bytes, current_val_ratio):
+def _refit_on_full(args, zstd_bin, train_source_dir, judge_dir, workdir, meta, stage1_winner,
+                    current_bytes, current_val_ratio, threads, judge_split_name="val"):
+    """Retrain the stage-1 winning (trainer, size) pair on train_source_dir,
+    then gate accept/reject on judge_dir.
+
+    judge_split_name distinguishes two cases:
+      - "val" (the original/"contaminated" mode): judge_dir IS the same
+        val_dir stage 1 was already scored on, so current_val_ratio (passed
+        in) is already the correct, already-computed prior -- reused as-is,
+        unchanged from the original implementation, for exact backward
+        compatibility with existing callers/results.
+      - "gate" (optC): judge_dir is a split the stage-1 winner was never
+        scored against before, so the prior must be freshly measured on
+        judge_dir too -- otherwise the comparison would be apples-to-oranges
+        (stage-1's val-split ratio vs refit's gate-split ratio).
+    """
     ratio_tmp = workdir / "ratio_tmp"
     refit_path = workdir / "refit_full.dict"
+    prior_path = workdir / "refit_prior.dict"
     refit_timeout = max(30, min(180, args.time_budget_s))
+    judge_bytes = dir_raw_bytes(judge_dir)
+
+    if judge_split_name == "val":
+        prior_ratio = current_val_ratio
+    else:
+        with open(prior_path, "wb") as f:
+            f.write(current_bytes)
+        prior_ratio = batch_ratio(zstd_bin, prior_path, judge_dir, args.target_level,
+                                   ratio_tmp, judge_bytes)
 
     trainer, size = stage1_winner["trainer"], stage1_winner["size"]
     t0 = time.monotonic()
-    ok, err_tail = train_dict(zstd_bin, trainer, train_dir, size, refit_path,
-                               timeout=refit_timeout)
+    ok, err_tail = train_dict(zstd_bin, trainer, train_source_dir, size, refit_path,
+                               timeout=refit_timeout, threads=threads)
     elapsed = time.monotonic() - t0
 
     if not ok:
         meta["refit_on_full"] = {"trainer": trainer, "size": size, "failed": True,
-                                  "error_tail": err_tail, "train_time_s": elapsed}
+                                  "error_tail": err_tail, "train_time_s": elapsed,
+                                  "judge_split": judge_split_name}
         log(f"refit_on_full: FAILED ({err_tail[:120]!r}), keeping stage1 winner")
         return current_bytes, "stage1", current_val_ratio
 
-    refit_ratio = batch_ratio(zstd_bin, refit_path, val_dir, args.target_level,
-                               ratio_tmp, meta["split"]["val_bytes"])
+    refit_ratio = batch_ratio(zstd_bin, refit_path, judge_dir, args.target_level,
+                               ratio_tmp, judge_bytes)
     rec = {"trainer": trainer, "size": size, "train_time_s": elapsed,
-           "val_ratio": refit_ratio, "prior_val_ratio": current_val_ratio}
+           "judge_split": judge_split_name, f"{judge_split_name}_ratio": refit_ratio,
+           f"prior_{judge_split_name}_ratio": prior_ratio}
 
-    if refit_ratio >= current_val_ratio:
+    if refit_ratio >= prior_ratio:
         rec["accepted"] = True
         meta["refit_on_full"] = rec
         with open(refit_path, "rb") as f:
             refit_bytes = f.read()
-        log(f"refit_on_full: accepted, val_ratio {current_val_ratio:.6f} -> {refit_ratio:.6f}")
+        log(f"refit_on_full: accepted ({judge_split_name}), "
+            f"{prior_ratio:.6f} -> {refit_ratio:.6f}")
+        # the refit's ratio was measured on judge_dir, not val_dir; report
+        # that as current_val_ratio so downstream meta/_finish stay
+        # internally consistent (it is genuinely the best-known estimate
+        # of this dict's quality at this point in the pipeline).
         return refit_bytes, "refit_full", refit_ratio
     else:
         rec["accepted"] = False
         meta["refit_on_full"] = rec
-        log(f"refit_on_full: rejected (val_ratio {refit_ratio:.6f} < {current_val_ratio:.6f}), "
+        log(f"refit_on_full: rejected ({judge_split_name}) ({refit_ratio:.6f} < {prior_ratio:.6f}), "
             f"keeping stage1 winner")
         return current_bytes, "stage1", current_val_ratio
 
